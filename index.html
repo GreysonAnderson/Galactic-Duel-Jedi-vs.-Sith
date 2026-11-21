@@ -712,10 +712,10 @@
         <div style="display: flex; gap: 14px; flex-wrap: wrap; justify-content: center;">
             <button id="btn-start-game" class="btn-sci gold-btn">SOLO ARENA</button>
             <button id="btn-open-mp" class="btn-sci">🌐 MULTIPLAYER DUEL</button>
-            <button id="btn-open-save-modal" class="btn-sci btn-small">💾 HOLOCRON SAVE</button>
+            <button id="btn-open-account" class="btn-sci btn-small" style="border-color: #a855f7; color: #e9d5ff;">👤 HOLONET ACCOUNT</button>
         </div>
-        <div id="global-save-status" style="margin-top: 10px; font-family: 'Orbitron', sans-serif; font-size: 0.72rem; letter-spacing: 0.12em; color: #4ade80;">
-            ● HOLOCRON AUTO-SAVE ACTIVE
+        <div id="global-save-status" style="margin-top: 10px; font-family: 'Orbitron', sans-serif; font-size: 0.74rem; letter-spacing: 0.12em; color: #4ade80;">
+            ● PILOT: GUEST • RANK: INITIATE (0 MP WINS)
         </div>
 
         <div class="controls-card">
@@ -767,7 +767,7 @@
             <!-- Left Panel: Faction, Character & Stats -->
             <div class="panel-card">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 0.85rem; flex-wrap: wrap; gap: 6px;">
-                    <span style="font-family: 'Orbitron', sans-serif; color: var(--gold);">WINS: <strong id="wins-counter">0</strong></span>
+                    <span style="font-family: 'Orbitron', sans-serif; color: var(--gold);">WINS: <strong id="wins-counter">0</strong> | MP: <strong id="mp-wins-counter" style="color:#a855f7;">0</strong></span>
                     <span style="font-family: 'Orbitron', sans-serif; color: #38bdf8;">CREDITS: <strong id="credits-counter">250</strong> ◈</span>
                     <button id="btn-open-shop" class="hud-mini-btn" style="border-color: var(--gold); color: var(--gold); font-weight: 700;">🛒 KYBER FORGE & DOJO</button>
                 </div>
@@ -816,24 +816,26 @@
                     </div>
                 </div>
 
-                <div style="border-top: 1px solid rgba(148,163,184,0.2); padding-top: 10px;">
-                    <div class="opponent-select-row">
-                        <label style="font-weight: 700; font-size: 0.9rem; color: #cbd5e1;">AI RIVAL:</label>
-                        <select id="opponent-select" class="sci-select"></select>
-                    </div>
-                    <div class="opponent-select-row">
-                        <label style="font-weight: 700; font-size: 0.9rem; color: #cbd5e1;">AI SKILL:</label>
-                        <select id="difficulty-select" class="sci-select">
-                            <option value="1">Lv. 1 — Youngling (0.6x Win ◈)</option>
-                            <option value="2">Lv. 2 — Padawan Learner (0.75x Win ◈)</option>
-                            <option value="3">Lv. 3 — Jedi Knight (0.9x Win ◈)</option>
-                            <option value="4" selected>Lv. 4 — Consular Duelist (1.0x Win ◈)</option>
-                            <option value="5">Lv. 5 — Battle Master (1.2x Win ◈)</option>
-                            <option value="6">Lv. 6 — Council Member (1.45x Win ◈)</option>
-                            <option value="7">Lv. 7 — Sith Marauder (1.75x Win ◈)</option>
-                            <option value="8">Lv. 8 — Dark Lord (2.1x Win ◈)</option>
-                            <option value="9">Lv. 9 — Chosen One / Emperor (2.6x Win ◈)</option>
-                        </select>
+                <div id="solo-ai-panel" style="border-top: 1px solid rgba(148,163,184,0.2); padding-top: 10px;">
+                    <div id="solo-ai-controls">
+                        <div class="opponent-select-row">
+                            <label style="font-weight: 700; font-size: 0.9rem; color: #cbd5e1;">AI RIVAL:</label>
+                            <select id="opponent-select" class="sci-select"></select>
+                        </div>
+                        <div class="opponent-select-row">
+                            <label style="font-weight: 700; font-size: 0.9rem; color: #cbd5e1;">AI SKILL:</label>
+                            <select id="difficulty-select" class="sci-select">
+                                <option value="1">Lv. 1 — Youngling (0.6x Win ◈)</option>
+                                <option value="2">Lv. 2 — Padawan Learner (0.75x Win ◈)</option>
+                                <option value="3">Lv. 3 — Jedi Knight (0.9x Win ◈)</option>
+                                <option value="4" selected>Lv. 4 — Consular Duelist (1.0x Win ◈)</option>
+                                <option value="5">Lv. 5 — Battle Master (1.2x Win ◈)</option>
+                                <option value="6">Lv. 6 — Council Member (1.45x Win ◈)</option>
+                                <option value="7">Lv. 7 — Sith Marauder (1.75x Win ◈)</option>
+                                <option value="8">Lv. 8 — Dark Lord (2.1x Win ◈)</option>
+                                <option value="9">Lv. 9 — Chosen One / Emperor (2.6x Win ◈)</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -943,21 +945,34 @@
             <!-- Host or Join Room -->
             <div class="panel-card" style="display: flex; flex-direction: column; justify-content: space-between;">
                 <div>
-                    <div class="saber-section-title" style="color: var(--gold);">CREATE OR JOIN DUEL ROOM</div>
-                    <div id="mp-loadout-summary" style="text-align: center; font-size: 0.85rem; color: #38bdf8; margin-bottom: 14px; font-family: 'Orbitron', sans-serif;">
+                    <div class="saber-section-title" style="color: var(--gold);">SUBSPACE MATCHMAKING & DUEL ROOMS</div>
+                    <div id="mp-rank-banner" style="text-align: center; font-size: 0.78rem; color: #c084fc; margin-bottom: 6px; font-family: 'Orbitron', sans-serif;">
+                        PILOT: GUEST • RANK: INITIATE (0 MP WINS)
+                    </div>
+                    <div id="mp-loadout-summary" style="text-align: center; font-size: 0.84rem; color: #38bdf8; margin-bottom: 12px; font-family: 'Orbitron', sans-serif;">
                         EQUIPPED: OBI-WAN KENOBI • MUSTAFAR
                     </div>
 
-                    <button id="btn-host-room" class="btn-sci gold-btn" style="width: 100%; margin-bottom: 14px;">HOST NEW DUEL ROOM</button>
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 12px; background: rgba(15,23,42,0.85); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(148,163,184,0.25);">
+                        <input id="mp-public-toggle" type="checkbox" checked style="width: 18px; height: 18px; accent-color: #facc15; cursor: pointer;">
+                        <label for="mp-public-toggle" style="font-family: 'Orbitron', sans-serif; font-size: 0.75rem; color: #f8fafc; cursor: pointer;">
+                            PUBLIC QUEUE (ALLOW AUTO-MATCHMAKING)
+                        </label>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+                        <button id="btn-host-room" class="btn-sci gold-btn btn-small" style="width: 100%;">HOST DUEL</button>
+                        <button id="btn-auto-join" class="btn-sci btn-small" style="width: 100%; border-color: #a855f7; color: #e9d5ff;">⚡ AUTO-JOIN QUEUE</button>
+                    </div>
 
                     <div style="display: flex; gap: 8px; margin-bottom: 14px;">
                         <input id="mp-room-input" type="text" maxlength="6" placeholder="ROOM CODE" style="flex: 1; text-transform: uppercase; text-align: center; letter-spacing: 0.2em; font-family: 'Orbitron', sans-serif; background: rgba(15,23,42,0.95); color: #facc15; border: 1px solid rgba(250,204,21,0.5); border-radius: 6px; padding: 10px;">
-                        <button id="btn-join-room" class="btn-sci btn-small">JOIN ROOM</button>
+                        <button id="btn-join-room" class="btn-sci btn-small">JOIN CODE</button>
                     </div>
                 </div>
 
-                <div id="mp-lobby-box" style="background: rgba(15,23,42,0.85); border: 1px dashed rgba(56,189,248,0.45); border-radius: 8px; padding: 14px; text-align: center; font-family: 'Orbitron', sans-serif; font-size: 0.82rem; color: #e2e8f0; line-height: 1.55;">
-                    CLICK <strong style="color:#facc15;">HOST NEW DUEL ROOM</strong> OR ENTER A FRIEND'S <strong style="color:#38bdf8;">ROOM CODE</strong>
+                <div id="mp-lobby-box" style="background: rgba(15,23,42,0.85); border: 1px dashed rgba(56,189,248,0.45); border-radius: 8px; padding: 14px; text-align: center; font-family: 'Orbitron', sans-serif; font-size: 0.8rem; color: #e2e8f0; line-height: 1.55;">
+                    HOST A DUEL, CLICK <strong style="color:#c084fc;">AUTO-JOIN QUEUE</strong> FOR RANK-MATCHED OPPONENTS, OR ENTER A <strong style="color:#38bdf8;">ROOM CODE</strong>
                 </div>
 
                 <button id="btn-copy-room" class="btn-sci btn-small" style="display: none; width: 100%; margin-top: 10px;">📋 COPY ROOM CODE</button>
@@ -1049,24 +1064,60 @@
         </div>
     </div>
 
-    <!-- 6. HOLOCRON SAVE & BACKUP MODAL -->
-    <div id="save-modal" style="display: none; position: fixed; inset: 0; z-index: 60; background: rgba(2, 6, 23, 0.86); backdrop-filter: blur(8px); align-items: center; justify-content: center; padding: 16px;">
-        <div class="panel-card" style="max-width: 520px; width: 100%; text-align: center;">
-            <div class="saber-section-title" style="color: var(--gold); font-size: 1rem;">JEDI / SITH HOLOCRON SAVE VAULT</div>
-            <p style="font-size: 0.9rem; color: #cbd5e1; margin-bottom: 12px;">
-                Your wins, Republic Credits, unlocked characters, lightsabers, Kyber crystals, achievements, and Dojo Mastery levels save automatically in your browser. Use a Holocron Code below to transfer progress across devices!
+    <!-- 5B. HOLONET ACCOUNT LOGIN / REGISTER MODAL -->
+    <div id="account-modal" style="display: none; position: fixed; inset: 0; z-index: 65; background: rgba(2, 6, 23, 0.88); backdrop-filter: blur(8px); align-items: center; justify-content: center; padding: 16px;">
+        <div class="panel-card" style="max-width: 460px; width: 100%; text-align: center;">
+            <div class="saber-section-title" style="color: #c084fc; font-size: 1.02rem;">HOLONET PILOT ACCOUNT</div>
+            <p style="font-size: 0.88rem; color: #cbd5e1; margin-bottom: 12px;">
+                Sign in or register an account to bind your save file, display your Username in Multiplayer duels, and track your Galactic Rank!
             </p>
-            <div id="save-summary-line" style="font-family: 'Orbitron', sans-serif; font-size: 0.78rem; color: #38bdf8; margin-bottom: 12px;">
-                WINS: 0 • CREDITS: 250 ◈ • ACHIEVEMENTS: 0/5
+            <div id="account-current-badge" style="font-family: 'Orbitron', sans-serif; font-size: 0.78rem; color: #4ade80; margin-bottom: 12px;">
+                ACTIVE PILOT: GUEST
             </div>
-            <textarea id="holocron-code-box" rows="3" placeholder="Click EXPORT CODE to generate a backup string, or paste a code here and click LOAD CODE..." style="width: 100%; background: rgba(15, 23, 42, 0.95); color: #facc15; border: 1px solid rgba(56, 189, 248, 0.45); border-radius: 8px; padding: 10px; font-family: monospace; font-size: 0.78rem; resize: none; margin-bottom: 10px;"></textarea>
-            <div id="save-modal-feedback" style="min-height: 22px; font-family: 'Orbitron', sans-serif; font-size: 0.74rem; color: #4ade80; margin-bottom: 10px;"></div>
-            <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-bottom: 12px;">
-                <button id="btn-export-save" class="btn-sci btn-small">📋 EXPORT &amp; COPY CODE</button>
-                <button id="btn-import-save" class="btn-sci gold-btn btn-small">📥 LOAD CODE</button>
-                <button id="btn-reset-save" class="btn-sci sith-btn btn-small">🗑 RESET SAVE</button>
+            <input id="acc-username-input" type="text" maxlength="16" placeholder="PILOT USERNAME (E.G. SKYWALKER99)" style="width: 100%; background: rgba(15, 23, 42, 0.95); color: #ffffff; border: 1px solid rgba(168, 85, 247, 0.55); border-radius: 8px; padding: 10px; font-family: 'Orbitron', sans-serif; font-size: 0.85rem; margin-bottom: 10px; text-transform: uppercase;">
+            <input id="acc-password-input" type="password" maxlength="32" placeholder="ACCOUNT PASSWORD" style="width: 100%; background: rgba(15, 23, 42, 0.95); color: #ffffff; border: 1px solid rgba(56, 189, 248, 0.45); border-radius: 8px; padding: 10px; font-family: 'Orbitron', sans-serif; font-size: 0.85rem; margin-bottom: 10px;">
+            <div id="account-feedback" style="min-height: 22px; font-family: 'Orbitron', sans-serif; font-size: 0.74rem; color: #facc15; margin-bottom: 10px;"></div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                <button id="btn-acc-login" class="btn-sci btn-small">SIGN IN</button>
+                <button id="btn-acc-register" class="btn-sci gold-btn btn-small">CREATE ACCOUNT</button>
             </div>
-            <button id="btn-close-save-modal" class="btn-sci btn-small" style="width: 100%;">CLOSE VAULT</button>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px;">
+                <button id="btn-acc-logout" class="btn-sci btn-small">SWITCH TO GUEST</button>
+                <button id="btn-reset-account" class="btn-sci sith-btn btn-small">🗑 RESET PROGRESS</button>
+            </div>
+            <button id="btn-close-account" class="btn-sci btn-small" style="width: 100%;">CLOSE</button>
+        </div>
+    </div>
+
+    <!-- 5C. CONFIRM MATCH JOIN MODAL -->
+    <div id="confirm-join-modal" style="display: none; position: fixed; inset: 0; z-index: 66; background: rgba(2, 6, 23, 0.9); backdrop-filter: blur(10px); align-items: center; justify-content: center; padding: 16px;">
+        <div class="panel-card" style="max-width: 500px; width: 100%; text-align: center; border-color: #facc15;">
+            <div class="saber-section-title" style="color: #facc15; font-size: 1.05rem;">OPPONENT FOUND — CONFIRM DUEL</div>
+            <p style="font-size: 0.88rem; color: #94a3b8; margin-bottom: 12px;">
+                Review your matched opponent and battleground before igniting lightsabers:
+            </p>
+            <div style="background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 10px; padding: 14px; margin-bottom: 14px; text-align: left;">
+                <div class="match-stat-line">
+                    <span style="color: var(--text-muted);">OPPONENT PILOT</span>
+                    <strong id="confirm-opp-user" style="color: #38bdf8;">UNKNOWN</strong>
+                </div>
+                <div class="match-stat-line">
+                    <span style="color: var(--text-muted);">OPPONENT RANK</span>
+                    <strong id="confirm-opp-rank" style="color: #c084fc;">INITIATE</strong>
+                </div>
+                <div class="match-stat-line">
+                    <span style="color: var(--text-muted);">OPPONENT WARRIOR</span>
+                    <strong id="confirm-opp-char" style="color: #ef4444;">KYLO REN</strong>
+                </div>
+                <div class="match-stat-line">
+                    <span style="color: var(--text-muted);">BATTLEGROUND</span>
+                    <strong id="confirm-opp-map" style="color: #facc15;">MUSTAFAR LAVA REFINERY</strong>
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <button id="btn-decline-join" class="btn-sci sith-btn btn-small">DECLINE ✖</button>
+                <button id="btn-accept-join" class="btn-sci gold-btn btn-small">ACCEPT DUEL ⚔</button>
+            </div>
         </div>
     </div>
 
@@ -1075,7 +1126,7 @@
  * GALACTIC DUEL: JEDI VS. SITH
  * Complete GitHub Pages-ready 2D Star Wars fighting game with Web Audio synthesized SFX,
  * dynamic saber trails, clash sparks, Force powers, Mandalorian weapons, character unlocks,
- * Kyber Forge shop, Mastery Dojo, IndexedDB auto-save, and Supabase Realtime Multiplayer.
+ * Kyber Forge shop, Mastery Dojo, Account-bound IndexedDB auto-save, and Supabase Realtime Multiplayer.
  */
 
 // ============================================================================
@@ -1575,6 +1626,34 @@ const CHARACTERS = {
                 mask: false,
                 visorColor: null
             }
+        },
+        {
+            id: 'grand_master_luke',
+            name: 'GRAND MASTER LUKE',
+            role: 'Legend of the Force',
+            faction: 'jedi',
+            bio: 'Supreme Jedi Legend unlocked at Galactic Grand Master Rank. Master of both emerald blade precision and overwhelming Force Projection waves.',
+            power: 97,
+            speed: 92,
+            force: 99,
+            maxHp: 270,
+            moveSpeed: 415,
+            damageMult: 1.13,
+            forceRegen: 28,
+            defaultColor: 'green',
+            defaultStyle: 'single',
+            unlockCondition: { type: 'mp_rank', rankIdx: 5, label: 'MP RANK: GALACTIC GRAND MASTER (15 MP WINS)' },
+            appearance: {
+                robeMain: '#0f172a',
+                robeTrim: '#334155',
+                cloak: '#020617',
+                skin: '#f1c27d',
+                hairColor: '#92400e',
+                beard: true,
+                hood: true,
+                mask: false,
+                visorColor: null
+            }
         }
     ],
     sith: [
@@ -1792,6 +1871,32 @@ const CHARACTERS = {
                 mask: true,
                 visorColor: '#ef4444'
             }
+        },
+        {
+            id: 'darth_nihilus',
+            name: 'DARTH NIHILUS',
+            role: 'Lord of Hunger',
+            faction: 'sith',
+            bio: 'Ancient Sith wound in the Force unlocked via Multiplayer victories. Drains enemy life energy with every dark wave.',
+            power: 95,
+            speed: 87,
+            force: 99,
+            maxHp: 265,
+            moveSpeed: 395,
+            damageMult: 1.11,
+            forceRegen: 27,
+            defaultColor: 'red',
+            defaultStyle: 'unstable_relic',
+            unlockCondition: { type: 'mp_wins', count: 5, label: 'MULTIPLAYER ONLY: 5 MP WINS' },
+            appearance: {
+                robeMain: '#09090b',
+                robeTrim: '#7f1d1d',
+                cloak: '#000000',
+                skin: '#f8fafc',
+                hood: true,
+                mask: true,
+                visorColor: '#ef4444'
+            }
         }
     ]
 };
@@ -1890,6 +1995,15 @@ const SABER_STYLES = [
         weight: 5,
         desc: '4 spinning blades + unlocks Quad-Blade Buzzsaw!',
         unlockCondition: { type: 'high_wins', minLvl: 8, count: 5, label: 'MYTHIC • 5 WINS VS LV. 8+ OR FORGE' }
+    },
+    {
+        id: 'eternal_champion_hilt',
+        name: 'SOVEREIGN PIKE',
+        tier: 'MYTHIC',
+        weight: 0,
+        excludeFromRoll: true,
+        desc: 'Multiplayer Ranked Trophy Hilt forged in pure gold & beskar.',
+        unlockCondition: { type: 'mp_wins', count: 3, label: 'MULTIPLAYER ONLY: 3 MP WINS' }
     }
 ];
 
@@ -1902,7 +2016,8 @@ const SABER_COLORS = [
     { id: 'purple', name: 'Amethyst Purple', tier: 'EPIC', weight: 15, core: '#ffffff', glow: '#a855f7', unlockLabel: 'EPIC • 6 WINS OR FORGE' },
     { id: 'white', name: 'Purified White', tier: 'EPIC', weight: 14, core: '#ffffff', glow: '#e2e8f0', unlockLabel: 'EPIC • COMBO ACHIEVEMENT OR FORGE' },
     { id: 'darksaber', name: 'Mandalorian Darksaber', tier: 'LEGENDARY', weight: 7, core: '#020617', glow: '#f8fafc', isDarksaber: true, unlockLabel: 'LEGENDARY • 4 WINS OR FORGE' },
-    { id: 'grievous_trophy', name: 'Trophy Dual (Blue/Green)', tier: 'MYTHIC', weight: 4, core: '#ffffff', glow: '#0ea5e9', secondaryGlow: '#22c55e', unlockLabel: 'MYTHIC • 7 WINS OR FORGE' }
+    { id: 'grievous_trophy', name: 'Trophy Dual (Blue/Green)', tier: 'MYTHIC', weight: 4, core: '#ffffff', glow: '#0ea5e9', secondaryGlow: '#22c55e', unlockLabel: 'MYTHIC • 7 WINS OR FORGE' },
+    { id: 'holonet_cyan', name: 'Subspace Aether (MP)', tier: 'MYTHIC', weight: 0, core: '#ffffff', glow: '#2dd4bf', unlockLabel: 'MULTIPLAYER ONLY: 1 MP WIN' }
 ];
 
 const ACHIEVEMENTS_DEF = [
@@ -2027,16 +2142,46 @@ const DEFAULT_SUPABASE_ANON_KEY = 'sb_publishable_FtCnxqtuLaj63w1T8siM4A_LFQ8Ryg
 const mp = {
     client: null,
     channel: null,
+    lobbyChannel: null,
     connected: false,
     active: false,
+    configuringLoadout: false,
     roomCode: '',
     isHost: false,
+    isPublic: true,
     lastSendTime: 0,
-    lastMatchPayload: null
+    lastMatchPayload: null,
+    opponentUsername: 'RIVAL PILOT',
+    opponentRankName: 'INITIATE',
+    publicRooms: {},
+    pendingJoinOffer: null
+};
+
+const MP_RANKS = [
+    { idx: 0, name: 'INITIATE', minWins: 0, color: '#94a3b8' },
+    { idx: 1, name: 'PADAWAN / ACOLYTE', minWins: 1, color: '#38bdf8' },
+    { idx: 2, name: 'JEDI KNIGHT / MARAUDER', minWins: 3, color: '#22c55e' },
+    { idx: 3, name: 'JEDI MASTER / SITH LORD', minWins: 6, color: '#a855f7' },
+    { idx: 4, name: 'COUNCIL HIGH MASTER', minWins: 10, color: '#f97316' },
+    { idx: 5, name: 'GALACTIC GRAND MASTER', minWins: 15, color: '#facc15' }
+];
+
+function getMpRank(mpWins = 0) {
+    let current = MP_RANKS[0];
+    for (const r of MP_RANKS) {
+        if (mpWins >= r.minWins) current = r;
+    }
+    return current;
+}
+
+const accountState = {
+    username: 'GUEST',
+    passwordHash: ''
 };
 
 const defaultProgress = {
     wins: 0,
+    mpWins: 0,
     highLvlWins: 0,
     credits: 250,
     defeatedIds: [],
@@ -2050,17 +2195,36 @@ const defaultProgress = {
 let playerProgress = JSON.parse(JSON.stringify(defaultProgress));
 let resetConfirmArmed = false;
 
+function hashPassword(pw) {
+    let h = 2166136261;
+    const str = String(pw || '');
+    for (let i = 0; i < str.length; i++) {
+        h ^= str.charCodeAt(i);
+        h = Math.imul(h, 16777619);
+    }
+    return (h >>> 0).toString(16);
+}
+
+function getActiveProfileId() {
+    return accountState.username && accountState.username !== 'GUEST'
+        ? 'acct_' + accountState.username.toUpperCase()
+        : 'main_pilot';
+}
+
 function openHolocronDB() {
     return new Promise((resolve, reject) => {
         if (!window.indexedDB) {
             reject(new Error('IndexedDB unavailable'));
             return;
         }
-        const req = window.indexedDB.open('GalacticDuelHolocronDB', 1);
+        const req = window.indexedDB.open('GalacticDuelHolocronDB', 2);
         req.onupgradeneeded = (e) => {
             const db = e.target.result;
             if (!db.objectStoreNames.contains('profiles')) {
                 db.createObjectStore('profiles', { keyPath: 'id' });
+            }
+            if (!db.objectStoreNames.contains('accounts')) {
+                db.createObjectStore('accounts', { keyPath: 'username' });
             }
         };
         req.onsuccess = () => resolve(req.result);
@@ -2068,61 +2232,57 @@ function openHolocronDB() {
     });
 }
 
-function updateSaveIndicators(label = '● HOLOCRON PROGRESS SAVED') {
+function updateSaveIndicators(label = null) {
+    const rank = getMpRank(playerProgress.mpWins || 0);
     const el = document.getElementById('global-save-status');
     if (el) {
-        el.textContent = label;
-        el.style.color = '#4ade80';
+        el.textContent = label || `● PILOT: ${accountState.username} • RANK: ${rank.name} (${playerProgress.mpWins || 0} MP WINS)`;
+        el.style.color = rank.color || '#4ade80';
     }
-    const sumEl = document.getElementById('save-summary-line');
-    if (sumEl) {
-        sumEl.textContent = `WINS: ${playerProgress.wins} • CREDITS: ${playerProgress.credits} ◈ • ACHIEVEMENTS: ${playerProgress.achievements.length}/${ACHIEVEMENTS_DEF.length}`;
+    const mpBanner = document.getElementById('mp-rank-banner');
+    if (mpBanner) {
+        mpBanner.textContent = `PILOT: ${accountState.username} • RANK: ${rank.name} (${playerProgress.mpWins || 0} MP WINS)`;
+        mpBanner.style.color = rank.color || '#c084fc';
+    }
+    const accBadge = document.getElementById('account-current-badge');
+    if (accBadge) {
+        accBadge.textContent = `ACTIVE PILOT: ${accountState.username} • ${rank.name} • ${playerProgress.credits} ◈`;
     }
 }
 
-async function loadProgress() {
+async function loadProgress(profileId = null) {
+    const targetId = profileId || getActiveProfileId();
     try {
         const db = await openHolocronDB();
         const tx = db.transaction('profiles', 'readonly');
         const store = tx.objectStore('profiles');
-        const req = store.get('main_pilot');
+        const req = store.get(targetId);
         req.onsuccess = () => {
             if (req.result && req.result.data) {
-                playerProgress = Object.assign({}, defaultProgress, req.result.data);
-                renderSetupUI();
-                updateSaveIndicators('● HOLOCRON SAVE LOADED');
+                playerProgress = Object.assign({}, JSON.parse(JSON.stringify(defaultProgress)), req.result.data);
+            } else {
+                playerProgress = JSON.parse(JSON.stringify(defaultProgress));
             }
+            renderSetupUI();
+            updateSaveIndicators();
         };
     } catch (e) {
-        updateSaveIndicators('● SESSION SAVE READY');
+        updateSaveIndicators();
     }
 }
 
 async function saveProgress() {
-    updateSaveIndicators('● SAVING PROGRESS...');
+    const targetId = getActiveProfileId();
+    updateSaveIndicators('● SAVING HOLONET PROFILE...');
     try {
         const db = await openHolocronDB();
         const tx = db.transaction('profiles', 'readwrite');
         const store = tx.objectStore('profiles');
-        store.put({ id: 'main_pilot', updatedAt: Date.now(), data: playerProgress });
-        tx.oncomplete = () => updateSaveIndicators('● HOLOCRON PROGRESS SAVED ✔');
+        store.put({ id: targetId, updatedAt: Date.now(), data: playerProgress });
+        tx.oncomplete = () => updateSaveIndicators();
     } catch (e) {
-        updateSaveIndicators('● PROGRESS SAVED IN SESSION');
+        updateSaveIndicators();
     }
-}
-
-function encodeHolocronCode() {
-    const json = JSON.stringify(playerProgress);
-    return 'GD1:' + btoa(unescape(encodeURIComponent(json)));
-}
-
-function decodeHolocronCode(codeStr) {
-    const trimmed = (codeStr || '').trim();
-    if (!trimmed.startsWith('GD1:')) throw new Error('Invalid Holocron Save Code prefix');
-    const json = decodeURIComponent(escape(atob(trimmed.slice(4))));
-    const parsed = JSON.parse(json);
-    if (typeof parsed !== 'object' || parsed === null) throw new Error('Corrupted save payload');
-    return Object.assign({}, defaultProgress, parsed);
 }
 
 function getAllCharacters() {
@@ -2144,6 +2304,8 @@ function isCharacterUnlocked(char) {
     const cond = char.unlockCondition;
     if (!cond || cond.type === 'starter') return true;
     if (cond.type === 'wins') return playerProgress.wins >= cond.count;
+    if (cond.type === 'mp_wins') return (playerProgress.mpWins || 0) >= cond.count;
+    if (cond.type === 'mp_rank') return getMpRank(playerProgress.mpWins || 0).idx >= cond.rankIdx;
     if (cond.type === 'high_wins') return (playerProgress.highLvlWins || 0) >= cond.count;
     if (cond.type === 'defeat') return playerProgress.defeatedIds.includes(cond.targetId);
     if (cond.type === 'defeat_lvl') return ((playerProgress.defeatedLvls || {})[cond.targetId] || 0) >= cond.minLvl;
@@ -2157,6 +2319,8 @@ function isSaberStyleUnlocked(style) {
     if (!cond || cond.type === 'starter') return true;
     if (cond.type === 'roll_only') return false;
     if (cond.type === 'wins') return playerProgress.wins >= cond.count;
+    if (cond.type === 'mp_wins') return (playerProgress.mpWins || 0) >= cond.count;
+    if (cond.type === 'mp_rank') return getMpRank(playerProgress.mpWins || 0).idx >= cond.rankIdx;
     if (cond.type === 'high_wins') return (playerProgress.highLvlWins || 0) >= cond.count;
     if (cond.type === 'defeat') return playerProgress.defeatedIds.includes(cond.targetId);
     if (cond.type === 'defeat_lvl') return ((playerProgress.defeatedLvls || {})[cond.targetId] || 0) >= cond.minLvl;
@@ -2166,6 +2330,7 @@ function isSaberStyleUnlocked(style) {
 
 function isColorUnlocked(color) {
     if (color.starter || playerProgress.unlockedColors.includes(color.id)) return true;
+    if (color.id === 'holonet_cyan' && (playerProgress.mpWins || 0) >= 1) return true;
     if (color.id === 'green' && playerProgress.wins >= 2) return true;
     if (color.id === 'darksaber' && playerProgress.wins >= 4) return true;
     if (color.id === 'purple' && (playerProgress.highLvlWins || 0) >= 4) return true;
@@ -2270,7 +2435,16 @@ function updateMultiplayerLoadoutBanner() {
 // ============================================================================
 function renderSetupUI() {
     document.getElementById('wins-counter').innerHTML = `${playerProgress.wins} <span style="font-size:0.72rem;color:#94a3b8;">(LV.8+: ${playerProgress.highLvlWins || 0})</span>`;
+    const mpWinsEl = document.getElementById('mp-wins-counter');
+    if (mpWinsEl) mpWinsEl.textContent = playerProgress.mpWins || 0;
     document.getElementById('credits-counter').textContent = playerProgress.credits;
+
+    const soloPanel = document.getElementById('solo-ai-panel');
+    const backBtn = document.getElementById('btn-back-title');
+    if (soloPanel && backBtn) {
+        soloPanel.style.display = mp.configuringLoadout ? 'none' : 'block';
+        backBtn.textContent = mp.configuringLoadout ? '◀ BACK TO LOBBY' : 'BACK';
+    }
 
     const listEl = document.getElementById('character-list');
     listEl.innerHTML = '';
@@ -2455,6 +2629,10 @@ function renderShopAndDojo() {
 }
 
 function renderMapSelection() {
+    const launchBtn = document.getElementById('btn-launch-duel');
+    if (launchBtn) {
+        launchBtn.textContent = mp.configuringLoadout ? 'CONFIRM LOADOUT FOR LOBBY ✔' : 'IGNITE LIGHTSABERS ⚔';
+    }
     const grid = document.getElementById('map-grid');
     grid.innerHTML = '';
     MAPS.forEach(m => {
@@ -2813,6 +2991,8 @@ function drawFighterModel(targetCtx, f, timeSec) {
             }
         } else if (styleId === 'double_bladed' || styleId === 'switchblade') {
             drawSaberBlade(targetCtx, -10, 0, -10 - bladeLen * 0.88, 0, colorObj, 5);
+        } else if (styleId === 'eternal_champion_hilt') {
+            drawSaberBlade(targetCtx, -10, 0, -10 - bladeLen * 0.65, 0, { core: '#ffffff', glow: '#facc15' }, 5);
         } else if (styleId === 'force_pike') {
             targetCtx.strokeStyle = '#ef4444';
             targetCtx.lineWidth = 3;
@@ -3005,9 +3185,15 @@ function startDuel(mpConfig = null) {
     ];
 
     if (mpConfig && !mp.isHost) {
+        mp.opponentUsername = mpConfig.hostUsername || 'HOST PILOT';
+        mp.opponentRankName = mpConfig.hostRankName || 'INITIATE';
         state.player = createFighter(state.selectedCharId, w * 0.78, -1, true, state.selectedSaberStyleId, state.selectedSaberColorId);
         state.enemy = createFighter(mpConfig.hostCharId, w * 0.22, 1, false, mpConfig.hostStyleId, mpConfig.hostColorId);
     } else {
+        if (mpConfig) {
+            mp.opponentUsername = mpConfig.guestUsername || 'CHALLENGER';
+            mp.opponentRankName = mpConfig.guestRankName || 'INITIATE';
+        }
         state.player = createFighter(state.selectedCharId, w * 0.22, 1, true, state.selectedSaberStyleId, state.selectedSaberColorId);
         const oppChar = mpConfig ? mpConfig.guestCharId : state.opponentId;
         const oppStyle = mpConfig ? mpConfig.guestStyleId : null;
@@ -3026,10 +3212,10 @@ function startDuel(mpConfig = null) {
     setTimeout(() => {
         if (state.enemy) state.enemy.ignited = true;
         sfx.playIgnite();
-    }, 850);
+    }, 900);
 }
 
-function triggerAttack(f, type = 'light') {
+function triggerAttack(f, type = 'light', fromNetwork = false) {
     if (state.introTimer > 0 || state.victoryWinner || f.attackTimer > 0 || f.stunTimer > 0) return;
     f.blocking = false;
     f.attackType = type;
@@ -3044,6 +3230,9 @@ function triggerAttack(f, type = 'light') {
     }
     f.vx = f.facing * (type === 'heavy' ? 230 : 140);
     sfx.playSwing(type === 'heavy');
+    if (f.isPlayer && mp.active && mp.channel && !fromNetwork) {
+        try { mp.channel.send({ type: 'broadcast', event: 'attack_event', payload: { type } }); } catch (e) {}
+    }
 }
 
 function triggerSpecial(f, fromNetwork = false) {
@@ -3607,14 +3796,44 @@ function updateCombat(dt) {
     updateParticlesAndText(dt);
 
     if (state.player.hp <= 0 || state.enemy.hp <= 0 || state.roundTime <= 0) {
+        if (mp.active && !mp.isHost) {
+            // Guest waits for Host's authoritative match_over event (with a brief safety fallback if host disconnects)
+            if (!mp.guestTimeout) {
+                mp.guestTimeout = setTimeout(() => {
+                    if (state.inCombat && !state.victoryWinner) {
+                        const fallbackWinner = state.player.hp > state.enemy.hp ? state.player : state.enemy;
+                        declareMatchWinner(fallbackWinner);
+                    }
+                }, 1400);
+            }
+            return;
+        }
         const winner = state.player.hp >= state.enemy.hp ? state.player : state.enemy;
-        const loser = winner === state.player ? state.enemy : state.player;
-        winner.victoryAnim = true;
-        loser.ignited = false;
-        state.victoryWinner = winner;
-        state.victoryTimer = 2.4;
-        sfx.playVictory();
+        if (mp.active && mp.isHost && mp.channel) {
+            try {
+                mp.channel.send({
+                    type: 'broadcast',
+                    event: 'match_over',
+                    payload: { winnerIsHost: winner === state.player }
+                });
+            } catch (e) {}
+        }
+        declareMatchWinner(winner);
     }
+}
+
+function declareMatchWinner(winner) {
+    if (state.victoryWinner) return;
+    if (mp.guestTimeout) {
+        clearTimeout(mp.guestTimeout);
+        mp.guestTimeout = null;
+    }
+    const loser = winner === state.player ? state.enemy : state.player;
+    winner.victoryAnim = true;
+    loser.ignited = false;
+    state.victoryWinner = winner;
+    state.victoryTimer = 2.4;
+    sfx.playVictory();
 }
 
 function updateParticlesAndText(dt) {
@@ -3639,7 +3858,10 @@ function drawFighterHUD(f, x, y, width, alignRight) {
     ctx.font = '900 15px Orbitron, sans-serif';
     ctx.fillStyle = '#ffffff';
     ctx.textAlign = alignRight ? 'right' : 'left';
-    ctx.fillText(f.char.name, alignRight ? x + width : x, y - 8);
+    const pilotTag = mp.active
+        ? ` [${f.isPlayer ? accountState.username : mp.opponentUsername}]`
+        : '';
+    ctx.fillText(f.char.name + pilotTag, alignRight ? x + width : x, y - 8);
 
     ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
     ctx.fillRect(x, y, width, 16);
@@ -3811,6 +4033,16 @@ function endDuel(winner) {
 
     if (playerWon) {
         playerProgress.wins += 1;
+        if (mp.active) {
+            const prevRank = getMpRank(playerProgress.mpWins || 0);
+            playerProgress.mpWins = (playerProgress.mpWins || 0) + 1;
+            const newRank = getMpRank(playerProgress.mpWins);
+            if (newRank.idx > prevRank.idx) {
+                unlockMessages.push(`RANK UP: ${newRank.name}`);
+            }
+            if (playerProgress.mpWins === 1) unlockMessages.push('MP CRYSTAL: SUBSPACE AETHER');
+            if (playerProgress.mpWins === 3) unlockMessages.push('MP HILT: SOVEREIGN PIKE');
+        }
         if (!mp.active && lvl >= 8) {
             playerProgress.highLvlWins = (playerProgress.highLvlWins || 0) + 1;
         }
@@ -3843,6 +4075,8 @@ function endDuel(winner) {
                 const cond = c.unlockCondition;
                 let justUnlocked = false;
                 if (cond.type === 'wins' && playerProgress.wins === cond.count) justUnlocked = true;
+                if (cond.type === 'mp_wins' && mp.active && playerProgress.mpWins === cond.count) justUnlocked = true;
+                if (cond.type === 'mp_rank' && mp.active && getMpRank(playerProgress.mpWins || 0).idx === cond.rankIdx) justUnlocked = true;
                 if (cond.type === 'high_wins' && !mp.active && lvl >= cond.minLvl && playerProgress.highLvlWins === cond.count) justUnlocked = true;
                 if (cond.type === 'defeat' && cond.targetId === state.enemy.char.id) justUnlocked = true;
                 if (cond.type === 'defeat_lvl' && !mp.active && cond.targetId === state.enemy.char.id && lvl >= cond.minLvl) justUnlocked = true;
@@ -3881,8 +4115,43 @@ function endDuel(winner) {
 }
 
 // ============================================================================
-// 8. SUPABASE REALTIME MULTIPLAYER ROOM SYNC
+// 8. SUPABASE REALTIME MULTIPLAYER ROOM SYNC & PUBLIC RANKED QUEUE
 // ============================================================================
+let publicBeaconInterval = null;
+
+function initPublicLobbyDirectory() {
+    if (!mp.client || mp.lobbyChannel) return;
+    try {
+        mp.lobbyChannel = mp.client.channel('galactic_duel_public_directory', {
+            config: { broadcast: { self: false } }
+        });
+        mp.lobbyChannel
+            .on('broadcast', { event: 'public_room_open' }, ({ payload }) => {
+                if (payload && payload.roomCode) {
+                    mp.publicRooms[payload.roomCode] = Object.assign({}, payload, { seenAt: Date.now() });
+                }
+            })
+            .on('broadcast', { event: 'public_room_closed' }, ({ payload }) => {
+                if (payload && payload.roomCode) {
+                    delete mp.publicRooms[payload.roomCode];
+                }
+            })
+            .subscribe();
+    } catch (e) {}
+}
+
+function stopPublicBeacon() {
+    if (publicBeaconInterval) {
+        clearInterval(publicBeaconInterval);
+        publicBeaconInterval = null;
+    }
+    if (mp.lobbyChannel && mp.roomCode) {
+        try {
+            mp.lobbyChannel.send({ type: 'broadcast', event: 'public_room_closed', payload: { roomCode: mp.roomCode } });
+        } catch (e) {}
+    }
+}
+
 function connectSupabaseClient(url, key, onReadyCallback = null) {
     const cleanUrl = (url || '').trim().replace(/\/rest\/v1\/?$/i, '').replace(/\/+$/, '');
     const cleanKey = (key || '').trim();
@@ -3892,6 +4161,7 @@ function connectSupabaseClient(url, key, onReadyCallback = null) {
     try {
         mp.client = window.supabase.createClient(cleanUrl, cleanKey);
         mp.connected = true;
+        initPublicLobbyDirectory();
         if (onReadyCallback) onReadyCallback();
         return true;
     } catch (err) {
@@ -3899,12 +4169,24 @@ function connectSupabaseClient(url, key, onReadyCallback = null) {
     }
 }
 
-function joinRealtimeRoom(roomCode, isHost) {
+function openConfirmJoinModal(roomOffer) {
+    mp.pendingJoinOffer = roomOffer;
+    const hostChar = findCharById(roomOffer.hostCharId);
+    const mapObj = MAPS.find(m => m.id === roomOffer.mapId) || MAPS[0];
+    document.getElementById('confirm-opp-user').textContent = roomOffer.hostUsername || 'RIVAL PILOT';
+    document.getElementById('confirm-opp-rank').textContent = `${roomOffer.hostRankName || 'INITIATE'} (${roomOffer.hostMpWins || 0} MP WINS)`;
+    document.getElementById('confirm-opp-char').textContent = hostChar.name;
+    document.getElementById('confirm-opp-map').textContent = mapObj.name.toUpperCase();
+    document.getElementById('confirm-join-modal').style.display = 'flex';
+}
+
+function joinRealtimeRoom(roomCode, isHost, skipPreview = false) {
     if (!mp.client) {
         connectSupabaseClient(DEFAULT_SUPABASE_URL, DEFAULT_SUPABASE_ANON_KEY);
     }
     if (!mp.client) return;
 
+    stopPublicBeacon();
     if (mp.channel) {
         try { mp.client.removeChannel(mp.channel); } catch (e) {}
     }
@@ -3912,14 +4194,16 @@ function joinRealtimeRoom(roomCode, isHost) {
     mp.roomCode = roomCode.toUpperCase();
     mp.isHost = isHost;
     mp.active = true;
+    mp.isPublic = !!document.getElementById('mp-public-toggle')?.checked;
 
+    const myRank = getMpRank(playerProgress.mpWins || 0);
     const lobbyBox = document.getElementById('mp-lobby-box');
     const copyBtn = document.getElementById('btn-copy-room');
     const inviteBtn = document.getElementById('btn-copy-invite');
 
     lobbyBox.innerHTML = isHost
-        ? `ROOM <strong style="color:#facc15;font-size:1.15rem;letter-spacing:0.16em;">${mp.roomCode}</strong> CREATED! SHARE THIS CODE WITH YOUR OPPONENT...`
-        : `CONNECTING TO ROOM <strong style="color:#38bdf8;font-size:1.15rem;">${mp.roomCode}</strong>...`;
+        ? `ROOM <strong style="color:#facc15;font-size:1.15rem;letter-spacing:0.16em;">${mp.roomCode}</strong> (${mp.isPublic ? 'PUBLIC QUEUE' : 'PRIVATE'}) OPEN! WAITING FOR CHALLENGER...`
+        : `INSPECTING ROOM <strong style="color:#38bdf8;font-size:1.15rem;">${mp.roomCode}</strong>...`;
 
     if (copyBtn) copyBtn.style.display = isHost ? 'block' : 'none';
     if (inviteBtn) inviteBtn.style.display = isHost ? 'block' : 'none';
@@ -3930,16 +4214,47 @@ function joinRealtimeRoom(roomCode, isHost) {
         });
 
         mp.channel
+            .on('broadcast', { event: 'room_probe' }, () => {
+                if (mp.isHost && !state.inCombat) {
+                    mp.channel.send({
+                        type: 'broadcast',
+                        event: 'room_info',
+                        payload: {
+                            roomCode: mp.roomCode,
+                            mapId: state.selectedMapId,
+                            hostCharId: state.selectedCharId,
+                            hostUsername: accountState.username,
+                            hostRankIdx: myRank.idx,
+                            hostRankName: myRank.name,
+                            hostMpWins: playerProgress.mpWins || 0
+                        }
+                    });
+                }
+            })
+            .on('broadcast', { event: 'room_info' }, ({ payload }) => {
+                if (!mp.isHost && !state.inCombat) {
+                    if (skipPreview) {
+                        sendGuestJoinRequest();
+                    } else {
+                        openConfirmJoinModal(payload);
+                    }
+                }
+            })
             .on('broadcast', { event: 'join_request' }, ({ payload }) => {
                 if (mp.isHost) {
+                    stopPublicBeacon();
                     const startPayload = {
                         mapId: state.selectedMapId,
                         hostCharId: state.selectedCharId,
                         hostStyleId: state.selectedSaberStyleId,
                         hostColorId: state.selectedSaberColorId,
+                        hostUsername: accountState.username,
+                        hostRankName: myRank.name,
                         guestCharId: payload.charId,
                         guestStyleId: payload.styleId,
-                        guestColorId: payload.colorId
+                        guestColorId: payload.colorId,
+                        guestUsername: payload.username || 'CHALLENGER',
+                        guestRankName: payload.rankName || 'INITIATE'
                     };
                     mp.channel.send({ type: 'broadcast', event: 'match_start', payload: startPayload });
                     startDuel(startPayload);
@@ -3947,8 +4262,12 @@ function joinRealtimeRoom(roomCode, isHost) {
             })
             .on('broadcast', { event: 'match_start' }, ({ payload }) => {
                 if (!mp.isHost) {
+                    document.getElementById('confirm-join-modal').style.display = 'none';
                     startDuel(payload);
                 }
+            })
+            .on('broadcast', { event: 'attack_event' }, ({ payload }) => {
+                if (state.inCombat && state.enemy) triggerAttack(state.enemy, payload.type || 'light', true);
             })
             .on('broadcast', { event: 'special_event' }, () => {
                 if (state.inCombat && state.enemy) triggerSpecial(state.enemy, true);
@@ -3959,37 +4278,58 @@ function joinRealtimeRoom(roomCode, isHost) {
             .on('broadcast', { event: 'ultimate_event' }, () => {
                 if (state.inCombat && state.enemy && state.player) triggerUltimate(state.enemy, state.player, true);
             })
+            .on('broadcast', { event: 'match_over' }, ({ payload }) => {
+                if (state.inCombat && !mp.isHost && state.player && state.enemy) {
+                    const winner = payload.winnerIsHost ? state.enemy : state.player;
+                    declareMatchWinner(winner);
+                }
+            })
             .on('broadcast', { event: 'fighter_sync' }, ({ payload }) => {
                 if (!state.inCombat || !state.enemy) return;
                 const w = gameCanvas.width || 1000;
                 const h = gameCanvas.height || 600;
-                state.enemy.x = payload.nx * w;
-                state.enemy.y = payload.ny * h;
+                state.enemy.targetNetX = payload.nx * w;
+                state.enemy.targetNetY = payload.ny * h;
+                if (Math.hypot(state.enemy.targetNetX - state.enemy.x, state.enemy.targetNetY - state.enemy.y) > 180) {
+                    state.enemy.x = state.enemy.targetNetX;
+                    state.enemy.y = state.enemy.targetNetY;
+                }
                 state.enemy.vx = payload.vx;
                 state.enemy.vy = payload.vy;
                 state.enemy.facing = payload.facing;
                 state.enemy.blocking = payload.blocking;
                 state.enemy.ignited = payload.ignited;
-                if (payload.attacking && state.enemy.attackTimer <= 0) {
-                    triggerAttack(state.enemy, payload.attackType || 'light');
+                if (typeof payload.selfHp === 'number') {
+                    state.enemy.hp = Math.min(state.enemy.hp, payload.selfHp);
                 }
-                if (typeof payload.enemyHp === 'number' && state.player) {
+                if (typeof payload.enemyHp === 'number' && state.player && !state.victoryWinner) {
                     state.player.hp = Math.min(state.player.hp, payload.enemyHp);
                 }
             })
             .subscribe((status) => {
                 if (status === 'SUBSCRIBED') {
-                    if (!isHost) {
-                        mp.channel.send({
-                            type: 'broadcast',
-                            event: 'join_request',
-                            payload: {
-                                charId: state.selectedCharId,
-                                styleId: state.selectedSaberStyleId,
-                                colorId: state.selectedSaberColorId
-                            }
-                        });
-                        lobbyBox.innerHTML = `CONNECTED TO <strong style="color:#4ade80;">${mp.roomCode}</strong>! STARTING DUEL...`;
+                    if (isHost && mp.isPublic && mp.lobbyChannel) {
+                        const announce = () => {
+                            try {
+                                mp.lobbyChannel.send({
+                                    type: 'broadcast',
+                                    event: 'public_room_open',
+                                    payload: {
+                                        roomCode: mp.roomCode,
+                                        mapId: state.selectedMapId,
+                                        hostCharId: state.selectedCharId,
+                                        hostUsername: accountState.username,
+                                        hostRankIdx: myRank.idx,
+                                        hostRankName: myRank.name,
+                                        hostMpWins: playerProgress.mpWins || 0
+                                    }
+                                });
+                            } catch (e) {}
+                        };
+                        announce();
+                        publicBeaconInterval = setInterval(announce, 1800);
+                    } else if (!isHost) {
+                        mp.channel.send({ type: 'broadcast', event: 'room_probe', payload: {} });
                     }
                 } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
                     lobbyBox.innerHTML = `<span style="color:#facc15;">ONLINE WEBSOCKET BLOCKED IN PREVIEW SANDBOX — HOST THIS HTML ON GITHUB PAGES FOR LIVE MULTIPLAYER!</span>`;
@@ -4000,10 +4340,27 @@ function joinRealtimeRoom(roomCode, isHost) {
     }
 }
 
+function sendGuestJoinRequest() {
+    if (!mp.channel) return;
+    const myRank = getMpRank(playerProgress.mpWins || 0);
+    mp.channel.send({
+        type: 'broadcast',
+        event: 'join_request',
+        payload: {
+            charId: state.selectedCharId,
+            styleId: state.selectedSaberStyleId,
+            colorId: state.selectedSaberColorId,
+            username: accountState.username,
+            rankName: myRank.name
+        }
+    });
+    document.getElementById('mp-lobby-box').innerHTML = `CONFIRMED! JOINING <strong style="color:#4ade80;">${mp.roomCode}</strong>...`;
+}
+
 function broadcastMultiplayerState() {
     if (!mp.active || !mp.channel || !state.player || !state.enemy) return;
     const now = performance.now();
-    if (now - mp.lastSendTime < 45) return;
+    if (now - mp.lastSendTime < 28) return;
     mp.lastSendTime = now;
 
     const w = gameCanvas.width || 1000;
@@ -4020,8 +4377,7 @@ function broadcastMultiplayerState() {
                 facing: state.player.facing,
                 blocking: state.player.blocking,
                 ignited: state.player.ignited,
-                attacking: state.player.attackTimer > 0,
-                attackType: state.player.attackType,
+                selfHp: state.player.hp,
                 enemyHp: state.enemy.hp
             }
         });
@@ -4031,20 +4387,120 @@ function broadcastMultiplayerState() {
 function updateRemotePlayer(dt) {
     if (!state.enemy) return;
     updateFighterPhysics(state.enemy, dt);
+    if (typeof state.enemy.targetNetX === 'number') {
+        const blend = Math.min(1, dt * 18);
+        state.enemy.x += (state.enemy.targetNetX - state.enemy.x) * blend;
+        state.enemy.y += (state.enemy.targetNetY - state.enemy.y) * blend;
+    }
+}
+
+function handleActionKey(code) {
+    if (!state.inCombat || !state.player || state.introTimer > 0 || state.victoryWinner) return;
+    const p = state.player;
+    if ((code === 'KeyW' || code === 'ArrowUp' || code === 'Space') && p.grounded && p.stunTimer <= 0) {
+        p.vy = -640;
+        p.grounded = false;
+        sfx.playSwing(false);
+    } else if (code === 'KeyJ' || code === 'KeyZ') {
+        triggerAttack(p, 'light');
+    } else if (code === 'KeyK' || code === 'KeyX') {
+        triggerAttack(p, 'heavy');
+    } else if (code === 'KeyL' || code === 'KeyC') {
+        triggerSpecial(p);
+    } else if (code === 'KeyH' || code === 'KeyV') {
+        triggerHeal(p);
+    } else if (code === 'KeyU' || code === 'KeyR') {
+        triggerUltimate(p, state.enemy);
+    }
+}
+
+function pickWeightedReward(pool) {
+    const totalWeight = pool.reduce((sum, item) => sum + (item.weight || 10), 0);
+    let r = Math.random() * totalWeight;
+    for (const item of pool) {
+        r -= (item.weight || 10);
+        if (r <= 0) return item;
+    }
+    return pool[pool.length - 1];
+}
+
+function runForgeSlotRoll(pool, onComplete) {
+    const reelBox = document.getElementById('forge-reel-box');
+    const reelTier = document.getElementById('forge-reel-tier');
+    const reelItem = document.getElementById('forge-reel-item');
+    const resultBox = document.getElementById('forge-result-box');
+
+    const winner = pickWeightedReward(pool);
+    reelBox.style.display = 'block';
+    resultBox.textContent = 'FORGING HOLOCRON CRYSTAL MATRIX...';
+
+    let step = 0;
+    const totalSteps = 18;
+    const interval = setInterval(() => {
+        step++;
+        const sample = step >= totalSteps ? winner : pool[Math.floor(Math.random() * pool.length)];
+        const tier = sample.tier || 'COMMON';
+        const tierColors = {
+            COMMON: '#cbd5e1',
+            RARE: '#38bdf8',
+            EPIC: '#a855f7',
+            LEGENDARY: '#facc15',
+            MYTHIC: '#ef4444'
+        };
+        reelTier.textContent = `TIER: ${tier}`;
+        reelTier.style.color = tierColors[tier] || '#38bdf8';
+        reelItem.textContent = sample.name.toUpperCase();
+        reelBox.style.borderColor = tierColors[tier] || '#facc15';
+        sfx.playSwing(false);
+
+        if (step >= totalSteps) {
+            clearInterval(interval);
+            sfx.playVictory();
+            onComplete(winner);
+        }
+    }, 85);
 }
 
 // ============================================================================
-// 9. EVENT LISTENERS & MAIN ANIMATION LOOP
+// 9. UI BUTTON & INPUT EVENT LISTENERS
 // ============================================================================
-document.getElementById('btn-start-game').onclick = () => showScreen('char-screen');
-document.getElementById('btn-open-mp').onclick = () => showScreen('mp-screen');
+document.getElementById('btn-start-game').onclick = () => {
+    mp.active = false;
+    mp.configuringLoadout = false;
+    sfx.init();
+    showScreen('char-screen');
+};
+
+document.getElementById('btn-open-mp').onclick = () => {
+    mp.configuringLoadout = false;
+    sfx.init();
+    showScreen('mp-screen');
+};
+
+document.getElementById('btn-back-title').onclick = () => {
+    if (mp.configuringLoadout) {
+        mp.configuringLoadout = false;
+        showScreen('mp-screen');
+    } else {
+        showScreen('title-screen');
+    }
+};
+document.getElementById('btn-to-maps').onclick = () => showScreen('map-screen');
+document.getElementById('btn-back-char').onclick = () => showScreen('char-screen');
+document.getElementById('btn-launch-duel').onclick = () => {
+    if (mp.configuringLoadout) {
+        mp.configuringLoadout = false;
+        showScreen('mp-screen');
+        return;
+    }
+    mp.active = false;
+    startDuel(null);
+};
 
 document.getElementById('tab-jedi').onclick = () => {
     state.activeFactionTab = 'jedi';
     document.getElementById('tab-jedi').classList.add('active');
     document.getElementById('tab-sith').classList.remove('active');
-    const firstJedi = CHARACTERS.jedi.find(c => isCharacterUnlocked(c)) || CHARACTERS.jedi[0];
-    state.selectedCharId = firstJedi.id;
     renderSetupUI();
 };
 
@@ -4052,8 +4508,6 @@ document.getElementById('tab-sith').onclick = () => {
     state.activeFactionTab = 'sith';
     document.getElementById('tab-sith').classList.add('active');
     document.getElementById('tab-jedi').classList.remove('active');
-    const firstSith = CHARACTERS.sith.find(c => isCharacterUnlocked(c)) || CHARACTERS.sith[0];
-    state.selectedCharId = firstSith.id;
     renderSetupUI();
 };
 
@@ -4062,78 +4516,17 @@ document.getElementById('opponent-select').onchange = (e) => {
 };
 
 document.getElementById('difficulty-select').onchange = (e) => {
-    state.difficulty = parseInt(e.target.value, 10) || 4;
+    state.difficulty = Number(e.target.value) || 4;
 };
 
 document.getElementById('btn-open-shop').onclick = () => showScreen('shop-screen');
 document.getElementById('btn-close-shop').onclick = () => showScreen('char-screen');
 
-let forgeSpinning = false;
-const TIER_COLORS = {
-    COMMON: '#94a3b8',
-    RARE: '#38bdf8',
-    EPIC: '#a855f7',
-    LEGENDARY: '#facc15',
-    MYTHIC: '#ef4444'
-};
-
-function pickWeightedItem(pool) {
-    const totalWeight = pool.reduce((sum, item) => sum + (item.weight || 10), 0);
-    let roll = Math.random() * totalWeight;
-    for (const item of pool) {
-        roll -= (item.weight || 10);
-        if (roll <= 0) return item;
-    }
-    return pool[pool.length - 1];
-}
-
-function runForgeRollAnimation(displayPool, finalPick, onComplete) {
-    forgeSpinning = true;
-    const reelBox = document.getElementById('forge-reel-box');
-    const reelTier = document.getElementById('forge-reel-tier');
-    const reelItem = document.getElementById('forge-reel-item');
-    reelBox.style.display = 'block';
-
-    // Build a suspenseful sequence favoring higher-tier sabers/colors visually while keeping the exact weighted outcome
-    const highTierPool = displayPool.filter(i => i.tier === 'EPIC' || i.tier === 'LEGENDARY' || i.tier === 'MYTHIC');
-    const totalSteps = 22;
-    let step = 0;
-
-    function tick() {
-        step++;
-        const isLast = step >= totalSteps;
-        let shown = finalPick;
-        if (!isLast) {
-            const source = (highTierPool.length > 0 && Math.random() < 0.65) ? highTierPool : displayPool;
-            shown = source[Math.floor(Math.random() * source.length)];
-        }
-        const tColor = TIER_COLORS[shown.tier] || '#facc15';
-        reelBox.style.borderColor = tColor;
-        reelTier.style.color = tColor;
-        reelTier.textContent = isLast ? `★ ${shown.tier} UNLOCKED ★` : `${shown.tier} TIER`;
-        reelItem.style.color = isLast ? '#ffffff' : tColor;
-        reelItem.textContent = shown.name.toUpperCase();
-        sfx.playSwing(isLast);
-
-        if (isLast) {
-            forgeSpinning = false;
-            sfx.playIgnite();
-            onComplete();
-        } else {
-            const delay = 45 + Math.pow(step / totalSteps, 2.3) * 240;
-            setTimeout(tick, delay);
-        }
-    }
-    tick();
-}
-
 document.getElementById('btn-buy-saber').onclick = () => {
-    if (forgeSpinning) return;
-    const rollablePool = SABER_STYLES.filter(s => !s.excludeFromRoll);
-    const locked = rollablePool.filter(s => !isSaberStyleUnlocked(s));
+    const locked = SABER_STYLES.filter(s => !s.excludeFromRoll && !isSaberStyleUnlocked(s));
     const resBox = document.getElementById('forge-result-box');
     if (locked.length === 0) {
-        resBox.textContent = 'ALL FORGEABLE LIGHTSABER HILTS UNLOCKED! (OTHERS REQUIRE MILESTONES)';
+        resBox.textContent = 'ALL FORGEABLE LIGHTSABER HILTS ALREADY UNLOCKED!';
         return;
     }
     if (playerProgress.credits < 300) {
@@ -4142,21 +4535,21 @@ document.getElementById('btn-buy-saber').onclick = () => {
         return;
     }
     playerProgress.credits -= 300;
-    const pick = pickWeightedItem(locked);
-    playerProgress.unlockedSabers.push(pick.id);
-    state.selectedSaberStyleId = pick.id;
     saveProgress();
-    resBox.textContent = 'FORGING HILT MATRIX...';
+    renderShopAndDojo();
 
-    runForgeRollAnimation(rollablePool, pick, () => {
-        resBox.textContent = `★ [${pick.tier}] FORGED NEW HILT: ${pick.name}! ★`;
+    runForgeSlotRoll(locked, (won) => {
+        if (!playerProgress.unlockedSabers.includes(won.id)) {
+            playerProgress.unlockedSabers.push(won.id);
+        }
+        state.selectedSaberStyleId = won.id;
+        saveProgress();
         renderShopAndDojo();
-        renderSetupUI();
+        resBox.textContent = `★ FORGED [${won.tier}] HILT: ${won.name}! ★`;
     });
 };
 
 document.getElementById('btn-buy-color').onclick = () => {
-    if (forgeSpinning) return;
     const locked = SABER_COLORS.filter(c => !isColorUnlocked(c));
     const resBox = document.getElementById('forge-result-box');
     if (locked.length === 0) {
@@ -4169,27 +4562,88 @@ document.getElementById('btn-buy-color').onclick = () => {
         return;
     }
     playerProgress.credits -= 200;
-    const pick = pickWeightedItem(locked);
-    playerProgress.unlockedColors.push(pick.id);
-    state.selectedSaberColorId = pick.id;
     saveProgress();
-    resBox.textContent = 'ATTUNING KYBER CRYSTAL...';
+    renderShopAndDojo();
 
-    runForgeRollAnimation(SABER_COLORS, pick, () => {
-        resBox.textContent = `★ [${pick.tier}] ATTUNED CRYSTAL: ${pick.name.toUpperCase()}! ★`;
+    runForgeSlotRoll(locked, (won) => {
+        if (!playerProgress.unlockedColors.includes(won.id)) {
+            playerProgress.unlockedColors.push(won.id);
+        }
+        state.selectedSaberColorId = won.id;
+        saveProgress();
         renderShopAndDojo();
-        renderSetupUI();
+        resBox.textContent = `★ ATTUNED [${won.tier}] CRYSTAL: ${won.name.toUpperCase()}! ★`;
     });
 };
 
-document.getElementById('btn-back-title').onclick = () => showScreen('title-screen');
-document.getElementById('btn-to-maps').onclick = () => showScreen('map-screen');
-document.getElementById('btn-back-char').onclick = () => showScreen('char-screen');
-document.getElementById('btn-launch-duel').onclick = () => {
+document.getElementById('btn-mp-customize').onclick = () => {
+    mp.configuringLoadout = true;
+    showScreen('char-screen');
+};
+document.getElementById('btn-mp-back').onclick = () => {
+    stopPublicBeacon();
     mp.active = false;
-    startDuel();
+    mp.configuringLoadout = false;
+    showScreen('title-screen');
 };
 
+document.getElementById('btn-auto-join').onclick = () => {
+    const lobbyBox = document.getElementById('mp-lobby-box');
+    const now = Date.now();
+    const candidates = Object.values(mp.publicRooms).filter(r => (now - r.seenAt) < 6000 && r.roomCode !== mp.roomCode);
+
+    if (candidates.length === 0) {
+        lobbyBox.innerHTML = `<span style="color:#facc15;">NO PUBLIC DUELISTS IN QUEUE RIGHT NOW — CLICK <strong>HOST DUEL</strong> WITH PUBLIC QUEUE ENABLED!</span>`;
+        sfx.playHit();
+        return;
+    }
+
+    const myRankIdx = getMpRank(playerProgress.mpWins || 0).idx;
+    let minDiff = Infinity;
+    candidates.forEach(c => {
+        const diff = Math.abs((c.hostRankIdx ?? 0) - myRankIdx);
+        if (diff < minDiff) minDiff = diff;
+    });
+
+    const closest = candidates.filter(c => Math.abs((c.hostRankIdx ?? 0) - myRankIdx) === minDiff);
+    const chosen = closest[Math.floor(Math.random() * closest.length)];
+    sfx.playIgnite();
+    openConfirmJoinModal(chosen);
+};
+
+document.getElementById('btn-accept-join').onclick = () => {
+    document.getElementById('confirm-join-modal').style.display = 'none';
+    if (!mp.pendingJoinOffer) return;
+    const offer = mp.pendingJoinOffer;
+    mp.pendingJoinOffer = null;
+    if (mp.roomCode === offer.roomCode && mp.channel) {
+        sendGuestJoinRequest();
+    } else {
+        joinRealtimeRoom(offer.roomCode, false, true);
+    }
+};
+
+document.getElementById('btn-decline-join').onclick = () => {
+    document.getElementById('confirm-join-modal').style.display = 'none';
+    mp.pendingJoinOffer = null;
+    mp.active = false;
+    document.getElementById('mp-lobby-box').textContent = 'MATCH DECLINED. SELECT ANOTHER OPPONENT OR HOST A DUEL.';
+};
+
+document.getElementById('btn-rematch').onclick = () => {
+    if (mp.active && mp.lastMatchPayload) {
+        startDuel(mp.lastMatchPayload);
+    } else {
+        startDuel(null);
+    }
+};
+
+document.getElementById('btn-change-setup').onclick = () => {
+    mp.active = false;
+    showScreen('char-screen');
+};
+
+// Multiplayer Lobby Listeners
 document.getElementById('btn-host-room').onclick = () => {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     let code = '';
@@ -4219,9 +4673,10 @@ document.getElementById('btn-copy-room').onclick = () => {
 
 document.getElementById('btn-copy-invite').onclick = () => {
     if (!mp.roomCode) return;
-    const inviteUrl = `${window.location.origin}${window.location.pathname}?room=${mp.roomCode}`;
+    const url = new URL(window.location.href);
+    url.searchParams.set('room', mp.roomCode);
     const tmp = document.createElement('textarea');
-    tmp.value = inviteUrl;
+    tmp.value = url.toString();
     document.body.appendChild(tmp);
     tmp.select();
     document.execCommand('copy');
@@ -4232,106 +4687,121 @@ document.getElementById('btn-copy-invite').onclick = () => {
     }, 2000);
 };
 
-document.getElementById('btn-mp-customize').onclick = () => showScreen('char-screen');
-document.getElementById('btn-mp-back').onclick = () => {
-    mp.active = false;
-    showScreen('title-screen');
-};
-
-document.getElementById('btn-toggle-sound').onclick = () => {
-    const muted = sfx.toggleMute();
-    document.getElementById('btn-toggle-sound').textContent = muted ? '🔇 SFX: OFF' : '🔊 SFX: ON';
-};
-
-document.getElementById('btn-quit-match').onclick = () => {
-    state.inCombat = false;
-    showScreen('title-screen');
-};
-
-document.getElementById('btn-rematch').onclick = () => {
-    startDuel(mp.active ? mp.lastMatchPayload : null);
-};
-
-document.getElementById('btn-change-setup').onclick = () => showScreen('char-screen');
-
-// Holocron Save Vault Modal Listeners
-document.getElementById('btn-open-save-modal').onclick = () => {
-    resetConfirmArmed = false;
-    document.getElementById('btn-reset-save').textContent = '🗑 RESET SAVE';
-    document.getElementById('save-modal-feedback').textContent = '';
+// Holonet Pilot Account Modal Listeners
+document.getElementById('btn-open-account').onclick = () => {
+    document.getElementById('account-feedback').textContent = '';
     updateSaveIndicators();
-    document.getElementById('save-modal').style.display = 'flex';
+    document.getElementById('account-modal').style.display = 'flex';
 };
 
-document.getElementById('btn-close-save-modal').onclick = () => {
-    document.getElementById('save-modal').style.display = 'none';
+document.getElementById('btn-close-account').onclick = () => {
+    document.getElementById('account-modal').style.display = 'none';
 };
 
-document.getElementById('btn-export-save').onclick = () => {
-    const code = encodeHolocronCode();
-    const box = document.getElementById('holocron-code-box');
-    box.value = code;
-    box.select();
-    document.execCommand('copy');
-    document.getElementById('save-modal-feedback').style.color = '#4ade80';
-    document.getElementById('save-modal-feedback').textContent = '✔ HOLOCRON SAVE CODE COPIED TO CLIPBOARD!';
-};
-
-document.getElementById('btn-import-save').onclick = () => {
-    const box = document.getElementById('holocron-code-box');
-    const fb = document.getElementById('save-modal-feedback');
-    try {
-        playerProgress = decodeHolocronCode(box.value);
-        saveProgress();
-        renderSetupUI();
-        sfx.playHeal();
-        fb.style.color = '#4ade80';
-        fb.textContent = '✔ PROGRESS RESTORED FROM HOLOCRON CODE!';
-    } catch (err) {
-        sfx.playHit();
+document.getElementById('btn-acc-register').onclick = async () => {
+    const uname = document.getElementById('acc-username-input').value.trim().toUpperCase();
+    const pw = document.getElementById('acc-password-input').value;
+    const fb = document.getElementById('account-feedback');
+    if (uname.length < 3 || pw.length < 3) {
         fb.style.color = '#ef4444';
-        fb.textContent = '✖ INVALID HOLOCRON SAVE CODE';
+        fb.textContent = 'USERNAME & PASSWORD MUST BE AT LEAST 3 CHARACTERS.';
+        return;
+    }
+    try {
+        const db = await openHolocronDB();
+        const tx = db.transaction('accounts', 'readwrite');
+        const store = tx.objectStore('accounts');
+        const checkReq = store.get(uname);
+        checkReq.onsuccess = async () => {
+            if (checkReq.result) {
+                fb.style.color = '#ef4444';
+                fb.textContent = 'USERNAME ALREADY REGISTERED — USE SIGN IN.';
+                sfx.playHit();
+                return;
+            }
+            store.put({ username: uname, passwordHash: hashPassword(pw), createdAt: Date.now() });
+            accountState.username = uname;
+            accountState.passwordHash = hashPassword(pw);
+            await saveProgress();
+            sfx.playVictory();
+            fb.style.color = '#4ade80';
+            fb.textContent = `✔ ACCOUNT CREATED & LINKED TO ${uname}!`;
+        };
+    } catch (e) {
+        accountState.username = uname;
+        updateSaveIndicators();
+        fb.style.color = '#4ade80';
+        fb.textContent = `✔ ACTIVE PILOT SET TO ${uname}`;
     }
 };
 
-document.getElementById('btn-reset-save').onclick = () => {
-    const btn = document.getElementById('btn-reset-save');
-    const fb = document.getElementById('save-modal-feedback');
+document.getElementById('btn-acc-login').onclick = async () => {
+    const uname = document.getElementById('acc-username-input').value.trim().toUpperCase();
+    const pw = document.getElementById('acc-password-input').value;
+    const fb = document.getElementById('account-feedback');
+    if (!uname || !pw) {
+        fb.style.color = '#ef4444';
+        fb.textContent = 'ENTER BOTH USERNAME AND PASSWORD.';
+        return;
+    }
+    try {
+        const db = await openHolocronDB();
+        const tx = db.transaction('accounts', 'readonly');
+        const store = tx.objectStore('accounts');
+        const req = store.get(uname);
+        req.onsuccess = async () => {
+            const rec = req.result;
+            if (!rec) {
+                fb.style.color = '#ef4444';
+                fb.textContent = 'ACCOUNT NOT FOUND — CLICK CREATE ACCOUNT.';
+                sfx.playHit();
+                return;
+            }
+            if (rec.passwordHash !== hashPassword(pw)) {
+                fb.style.color = '#ef4444';
+                fb.textContent = 'INCORRECT PASSWORD.';
+                sfx.playHit();
+                return;
+            }
+            accountState.username = uname;
+            accountState.passwordHash = rec.passwordHash;
+            await loadProgress('acct_' + uname);
+            sfx.playHeal();
+            fb.style.color = '#4ade80';
+            fb.textContent = `✔ SIGNED IN AS ${uname}! SAVE LOADED.`;
+        };
+    } catch (e) {
+        fb.style.color = '#ef4444';
+        fb.textContent = 'ACCOUNT STORAGE UNAVAILABLE.';
+    }
+};
+
+document.getElementById('btn-acc-logout').onclick = async () => {
+    accountState.username = 'GUEST';
+    accountState.passwordHash = '';
+    await loadProgress('main_pilot');
+    document.getElementById('account-feedback').style.color = '#38bdf8';
+    document.getElementById('account-feedback').textContent = 'SWITCHED TO GUEST PROFILE.';
+};
+
+document.getElementById('btn-reset-account').onclick = async () => {
+    const btn = document.getElementById('btn-reset-account');
+    const fb = document.getElementById('account-feedback');
     if (!resetConfirmArmed) {
         resetConfirmArmed = true;
-        btn.textContent = '⚠ CLICK AGAIN TO CONFIRM';
+        btn.textContent = '⚠ CONFIRM RESET';
         fb.style.color = '#facc15';
-        fb.textContent = 'WARNING: THIS WILL ERASE ALL UNLOCKS & CREDITS!';
+        fb.textContent = `WARNING: THIS ERASES ALL PROGRESS FOR ${accountState.username}!`;
         return;
     }
     resetConfirmArmed = false;
-    btn.textContent = '🗑 RESET SAVE';
+    btn.textContent = '🗑 RESET PROGRESS';
     playerProgress = JSON.parse(JSON.stringify(defaultProgress));
-    saveProgress();
+    await saveProgress();
     renderSetupUI();
     fb.style.color = '#38bdf8';
-    fb.textContent = 'SAVE DATA RESET TO DEFAULT.';
+    fb.textContent = `PROGRESS RESET FOR ${accountState.username}.`;
 };
-
-// Keyboard & Touch Input Handling
-function handleActionKey(code) {
-    if (!state.inCombat || !state.player) return;
-    const p = state.player;
-    if ((code === 'KeyW' || code === 'ArrowUp' || code === 'Space') && p.grounded) {
-        p.vy = -630;
-        p.grounded = false;
-    } else if (code === 'KeyJ' || code === 'KeyZ') {
-        triggerAttack(p, 'light');
-    } else if (code === 'KeyK' || code === 'KeyX') {
-        triggerAttack(p, 'heavy');
-    } else if (code === 'KeyL' || code === 'KeyC') {
-        triggerSpecial(p);
-    } else if (code === 'KeyH' || code === 'KeyV') {
-        triggerHeal(p);
-    } else if (code === 'KeyU' || code === 'KeyR') {
-        triggerUltimate(p, state.enemy);
-    }
-}
 
 window.addEventListener('keydown', (e) => {
     if (!keys[e.code]) {
