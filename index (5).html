@@ -1,0 +1,3896 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Galactic Duel: Jedi vs. Sith - 2D Star Wars Lightsaber Fighting Game with Online Multiplayer & Persistent Progression">
+    <meta name="theme-color" content="#04070d">
+    <title>Galactic Duel: Jedi vs. Sith</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2304070d'/%3E%3Cline x1='16' y1='48' x2='48' y2='16' stroke='%2338bdf8' stroke-width='7' stroke-linecap='round'/%3E%3Cline x1='16' y1='48' x2='48' y2='16' stroke='%23ffffff' stroke-width='3' stroke-linecap='round'/%3E%3Cline x1='48' y1='48' x2='16' y2='16' stroke='%23ef4444' stroke-width='7' stroke-linecap='round'/%3E%3Cline x1='48' y1='48' x2='16' y2='16' stroke='%23ffffff' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg-space: #04070d;
+            --panel-bg: rgba(11, 18, 32, 0.88);
+            --panel-border: rgba(56, 189, 248, 0.35);
+            --jedi-blue: #38bdf8;
+            --sith-red: #ef4444;
+            --gold: #facc15;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-space);
+            color: var(--text-main);
+            font-family: 'Rajdhani', sans-serif;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Animated Starfield Canvas in Background */
+        #starfield {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Screen Containers */
+        .screen {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            overflow-y: auto;
+        }
+
+        .screen.active {
+            display: flex;
+            animation: fadeIn 0.35s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Typography & Titles */
+        .title-logo {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900;
+            font-size: clamp(2rem, 6vw, 4.4rem);
+            text-align: center;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            background: linear-gradient(180deg, #ffffff 0%, #93c5fd 55%, #38bdf8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 22px rgba(56, 189, 248, 0.55));
+            margin-bottom: 6px;
+        }
+
+        .subtitle {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(0.85rem, 2.2vw, 1.25rem);
+            letter-spacing: 0.35em;
+            color: var(--gold);
+            text-transform: uppercase;
+            margin-bottom: 24px;
+            text-shadow: 0 0 12px rgba(250, 204, 21, 0.45);
+            text-align: center;
+        }
+
+        /* Stylized Sci-Fi Buttons */
+        .btn-sci {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 14px 32px;
+            border-radius: 8px;
+            border: 2px solid var(--jedi-blue);
+            background: linear-gradient(135deg, rgba(14, 116, 144, 0.35), rgba(15, 23, 42, 0.9));
+            color: #ffffff;
+            cursor: pointer;
+            box-shadow: 0 0 18px rgba(56, 189, 248, 0.35), inset 0 0 12px rgba(56, 189, 248, 0.2);
+            transition: all 0.2s ease;
+        }
+
+        .btn-sci:hover:not(:disabled) {
+            transform: translateY(-2px) scale(1.03);
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.45), rgba(30, 58, 138, 0.9));
+            box-shadow: 0 0 28px rgba(56, 189, 248, 0.75);
+        }
+
+        .btn-sci:active:not(:disabled) {
+            transform: translateY(1px) scale(0.98);
+        }
+
+        .btn-sci:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
+        .btn-sci.sith-btn {
+            border-color: var(--sith-red);
+            background: linear-gradient(135deg, rgba(153, 27, 27, 0.45), rgba(15, 23, 42, 0.9));
+            box-shadow: 0 0 18px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-sci.sith-btn:hover:not(:disabled) {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.55), rgba(69, 10, 10, 0.95));
+            box-shadow: 0 0 28px rgba(239, 68, 68, 0.8);
+        }
+
+        .btn-sci.gold-btn {
+            border-color: var(--gold);
+            color: #fef08a;
+            background: linear-gradient(135deg, rgba(161, 98, 7, 0.45), rgba(15, 23, 42, 0.92));
+            box-shadow: 0 0 20px rgba(250, 204, 21, 0.35);
+        }
+
+        .btn-sci.gold-btn:hover:not(:disabled) {
+            box-shadow: 0 0 30px rgba(250, 204, 21, 0.75);
+        }
+
+        .btn-small {
+            padding: 9px 18px;
+            font-size: 0.85rem;
+        }
+
+        /* Controls Help Box on Title Screen */
+        .controls-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            padding: 18px 24px;
+            margin-top: 20px;
+            max-width: 780px;
+            width: 100%;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.65);
+        }
+
+        .controls-card h3 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.9rem;
+            color: var(--jedi-blue);
+            letter-spacing: 0.14em;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            font-size: 0.92rem;
+        }
+
+        .control-item {
+            background: rgba(15, 23, 42, 0.75);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 6px;
+            padding: 8px 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .key-badge {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 0.78rem;
+            color: var(--gold);
+            background: rgba(250, 204, 21, 0.12);
+            border: 1px solid rgba(250, 204, 21, 0.4);
+            border-radius: 4px;
+            padding: 2px 8px;
+            margin-bottom: 4px;
+        }
+
+        /* Character & Lightsaber Customization Screen */
+        .setup-header {
+            text-align: center;
+            margin-bottom: 12px;
+        }
+
+        .setup-header h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(1.3rem, 3.2vw, 2.1rem);
+            letter-spacing: 0.1em;
+            color: #ffffff;
+        }
+
+        .char-setup-container {
+            display: grid;
+            grid-template-columns: 1.15fr 0.85fr;
+            gap: 18px;
+            width: 100%;
+            max-width: 1120px;
+            max-height: 76vh;
+            overflow-y: auto;
+            padding: 4px;
+        }
+
+        @media (max-width: 860px) {
+            .char-setup-container {
+                grid-template-columns: 1fr;
+                max-height: 74vh;
+            }
+        }
+
+        .panel-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 14px;
+            padding: 18px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+        }
+
+        .faction-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .faction-tab {
+            flex: 1;
+            padding: 10px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 0.88rem;
+            letter-spacing: 0.08em;
+            border-radius: 8px;
+            border: 2px solid rgba(148, 163, 184, 0.25);
+            background: rgba(15, 23, 42, 0.7);
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .faction-tab.active.jedi {
+            border-color: var(--jedi-blue);
+            color: #ffffff;
+            background: rgba(14, 116, 144, 0.35);
+            box-shadow: 0 0 16px rgba(56, 189, 248, 0.35);
+        }
+
+        .faction-tab.active.sith {
+            border-color: var(--sith-red);
+            color: #ffffff;
+            background: rgba(153, 27, 27, 0.35);
+            box-shadow: 0 0 16px rgba(239, 68, 68, 0.35);
+        }
+
+        .char-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .char-card {
+            background: rgba(15, 23, 42, 0.85);
+            border: 2px solid rgba(148, 163, 184, 0.2);
+            border-radius: 10px;
+            padding: 11px 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .char-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.45);
+        }
+
+        .char-card.selected.jedi {
+            border-color: var(--jedi-blue);
+            background: rgba(56, 189, 248, 0.16);
+            box-shadow: 0 0 14px rgba(56, 189, 248, 0.25);
+        }
+
+        .char-card.selected.sith {
+            border-color: var(--sith-red);
+            background: rgba(239, 68, 68, 0.16);
+            box-shadow: 0 0 14px rgba(239, 68, 68, 0.25);
+        }
+
+        .char-card.locked {
+            opacity: 0.62;
+            border-style: dashed;
+            border-color: rgba(250, 204, 21, 0.4);
+        }
+
+        .unlock-badge {
+            font-size: 0.68rem;
+            font-family: 'Orbitron', sans-serif;
+            color: var(--gold);
+            margin-top: 4px;
+            letter-spacing: 0.04em;
+        }
+
+        .char-card-name {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.82rem;
+            font-weight: 900;
+            letter-spacing: 0.06em;
+            color: #ffffff;
+            margin-bottom: 3px;
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.35);
+        }
+
+        .char-card-role {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        /* Stat Bars */
+        .stat-row {
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 3px;
+            color: #cbd5e1;
+        }
+
+        .stat-track {
+            width: 100%;
+            height: 8px;
+            background: rgba(15, 23, 42, 0.9);
+            border-radius: 99px;
+            overflow: hidden;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+        }
+
+        .stat-fill {
+            height: 100%;
+            border-radius: 99px;
+            transition: width 0.3s ease, background-color 0.3s ease;
+        }
+
+        /* Lightsaber Color Swatches */
+        .saber-section-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.85rem;
+            letter-spacing: 0.1em;
+            color: #e2e8f0;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .saber-swatches {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .swatch {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid rgba(255, 255, 255, 0.25);
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+        }
+
+        .swatch:hover {
+            transform: scale(1.14);
+        }
+
+        .swatch.active {
+            transform: scale(1.2);
+            border-color: #ffffff;
+        }
+
+        /* Live Character + Saber Preview Canvas */
+        .preview-box {
+            width: 100%;
+            height: 215px;
+            background: radial-gradient(circle at center, rgba(30, 41, 59, 0.75) 0%, rgba(4, 7, 13, 0.95) 100%);
+            border: 1px solid rgba(148, 163, 184, 0.25);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #preview-canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        .opponent-select-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 8px;
+        }
+
+        select.sci-select {
+            flex: 1;
+            background: rgba(15, 23, 42, 0.95);
+            color: #ffffff;
+            border: 1px solid rgba(56, 189, 248, 0.45);
+            border-radius: 8px;
+            padding: 8px 10px;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            outline: none;
+            cursor: pointer;
+        }
+
+        /* Map Selection Grid */
+        .map-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 16px;
+            width: 100%;
+            max-width: 1120px;
+            max-height: 64vh;
+            overflow-y: auto;
+            padding-right: 4px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 820px) {
+            .map-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .map-card {
+            background: var(--panel-bg);
+            border: 2px solid rgba(148, 163, 184, 0.25);
+            border-radius: 14px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .map-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--gold);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.75), 0 0 20px rgba(250, 204, 21, 0.25);
+        }
+
+        .map-card.selected {
+            border-color: var(--gold);
+            box-shadow: 0 0 25px rgba(250, 204, 21, 0.45);
+        }
+
+        .map-thumb {
+            width: 100%;
+            height: 135px;
+            display: block;
+        }
+
+        .map-info {
+            padding: 14px;
+        }
+
+        .map-name {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 4px;
+        }
+
+        .map-desc {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.35;
+        }
+
+        .nav-footer {
+            display: flex;
+            gap: 14px;
+            justify-content: center;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        /* Combat Arena Screen */
+        #combat-screen {
+            padding: 0;
+            overflow: hidden;
+        }
+
+        #game-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* Top Combat HUD Controls */
+        .combat-top-controls {
+            position: absolute;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 25;
+            display: flex;
+            gap: 8px;
+        }
+
+        .hud-mini-btn {
+            background: rgba(15, 23, 42, 0.75);
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            color: #e2e8f0;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.72rem;
+            padding: 5px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            backdrop-filter: blur(4px);
+        }
+
+        .hud-mini-btn:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+
+        /* Live Keybind Reminder Strip during Combat */
+        .combat-key-bar {
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 22;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            background: rgba(4, 7, 13, 0.76);
+            border: 1px solid rgba(56, 189, 248, 0.28);
+            border-radius: 8px;
+            padding: 5px 12px;
+            pointer-events: none;
+            backdrop-filter: blur(6px);
+            max-width: 96vw;
+        }
+
+        .key-hint {
+            font-size: 0.75rem;
+            color: #cbd5e1;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+        }
+
+        .key-hint b {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.68rem;
+            color: var(--gold);
+            background: rgba(250, 204, 21, 0.14);
+            border: 1px solid rgba(250, 204, 21, 0.4);
+            border-radius: 4px;
+            padding: 1px 5px;
+        }
+
+        @media (pointer: coarse) and (max-width: 900px) {
+            .combat-key-bar {
+                display: none;
+            }
+        }
+
+        /* Mobile / Touch Controls Overlay */
+        .touch-controls {
+            position: absolute;
+            bottom: 14px;
+            left: 14px;
+            right: 14px;
+            z-index: 20;
+            display: none;
+            justify-content: space-between;
+            align-items: flex-end;
+            pointer-events: none;
+        }
+
+        @media (pointer: coarse), (max-width: 900px) {
+            .touch-controls {
+                display: flex;
+            }
+        }
+
+        .touch-pad {
+            display: flex;
+            gap: 8px;
+            pointer-events: auto;
+        }
+
+        .touch-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(15, 23, 42, 0.65);
+            border: 2px solid rgba(56, 189, 248, 0.45);
+            color: #ffffff;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 0.72rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+            touch-action: manipulation;
+        }
+
+        .touch-btn:active {
+            background: rgba(56, 189, 248, 0.45);
+            transform: scale(0.92);
+        }
+
+        .touch-btn.atk {
+            border-color: rgba(239, 68, 68, 0.65);
+        }
+
+        .touch-btn.force {
+            border-color: rgba(250, 204, 21, 0.65);
+        }
+
+        /* Victory / Defeat Overlay Screen */
+        .match-stats-box {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 14px;
+            padding: 22px 32px;
+            margin: 18px 0 24px;
+            min-width: 300px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .match-stat-line {
+            display: flex;
+            justify-content: space-between;
+            gap: 24px;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+            font-size: 1.05rem;
+        }
+
+        .match-stat-line:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Background Starfield -->
+    <canvas id="starfield"></canvas>
+
+    <!-- 1. TITLE SCREEN -->
+    <div id="title-screen" class="screen active">
+        <div class="subtitle">A LONG TIME AGO IN A GALAXY FAR, FAR AWAY...</div>
+        <h1 class="title-logo">GALACTIC DUEL</h1>
+        <div class="subtitle" style="margin-bottom: 22px; color: #38bdf8;">JEDI VS. SITH</div>
+
+        <div style="display: flex; gap: 14px; flex-wrap: wrap; justify-content: center;">
+            <button id="btn-start-game" class="btn-sci gold-btn">SOLO ARENA</button>
+            <button id="btn-open-mp" class="btn-sci">🌐 MULTIPLAYER DUEL</button>
+            <button id="btn-open-save-modal" class="btn-sci btn-small">💾 HOLOCRON SAVE</button>
+        </div>
+        <div id="global-save-status" style="margin-top: 10px; font-family: 'Orbitron', sans-serif; font-size: 0.72rem; letter-spacing: 0.12em; color: #4ade80;">
+            ● HOLOCRON AUTO-SAVE ACTIVE
+        </div>
+
+        <div class="controls-card">
+            <h3>LIGHTSABER COMBAT & FORCE CONTROLS</h3>
+            <div class="controls-grid">
+                <div class="control-item">
+                    <span class="key-badge">A / D or ◀ / ▶</span>
+                    <span>Move & Double-Tap Dash</span>
+                </div>
+                <div class="control-item">
+                    <span class="key-badge">W / ▲ / SPACE</span>
+                    <span>Force Jump</span>
+                </div>
+                <div class="control-item">
+                    <span class="key-badge">J or Z</span>
+                    <span>Light Saber Combo (3-Hit)</span>
+                </div>
+                <div class="control-item">
+                    <span class="key-badge">K or X</span>
+                    <span>Heavy Cleave (Guard Break)</span>
+                </div>
+                <div class="control-item">
+                    <span class="key-badge">S / ▼ / SHIFT</span>
+                    <span>Lightsaber Block & Deflect</span>
+                </div>
+                <div class="control-item">
+                    <span class="key-badge">L or C</span>
+                    <span>Force / Blaster / Buzzsaw</span>
+                </div>
+                <div class="control-item">
+                    <span class="key-badge">H or V</span>
+                    <span>Force Heal / Drain (50 Energy)</span>
+                </div>
+                <div class="control-item">
+                    <span class="key-badge">U or R</span>
+                    <span>All-Out Ultimate (Once, -25% HP)</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. CHARACTER & LIGHTSABER CUSTOMIZATION SCREEN -->
+    <div id="char-screen" class="screen">
+        <div class="setup-header">
+            <h2>CHOOSE YOUR WARRIOR & KYBER CRYSTAL</h2>
+        </div>
+
+        <div class="char-setup-container">
+            <!-- Left Panel: Faction, Character & Stats -->
+            <div class="panel-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 0.85rem; flex-wrap: wrap; gap: 6px;">
+                    <span style="font-family: 'Orbitron', sans-serif; color: var(--gold);">WINS: <strong id="wins-counter">0</strong></span>
+                    <span style="font-family: 'Orbitron', sans-serif; color: #38bdf8;">CREDITS: <strong id="credits-counter">250</strong> ◈</span>
+                    <button id="btn-open-shop" class="hud-mini-btn" style="border-color: var(--gold); color: var(--gold); font-weight: 700;">🛒 KYBER FORGE & DOJO</button>
+                </div>
+
+                <div class="faction-tabs">
+                    <div id="tab-jedi" class="faction-tab jedi active">JEDI & MANDALORE</div>
+                    <div id="tab-sith" class="faction-tab sith">SITH & SEPARATISTS</div>
+                </div>
+
+                <div id="character-list" class="char-grid"></div>
+
+                <p id="char-bio" style="font-size: 0.95rem; color: #cbd5e1; margin-bottom: 12px; min-height: 38px;"></p>
+
+                <div class="stat-row">
+                    <div class="stat-label"><span>SABER ATTACK</span><span id="stat-atk-val">85</span></div>
+                    <div class="stat-track"><div id="stat-atk-bar" class="stat-fill" style="width: 85%; background: #38bdf8;"></div></div>
+                </div>
+                <div class="stat-row">
+                    <div class="stat-label"><span>AGILITY & SPEED</span><span id="stat-spd-val">80</span></div>
+                    <div class="stat-track"><div id="stat-spd-bar" class="stat-fill" style="width: 80%; background: #22c55e;"></div></div>
+                </div>
+                <div class="stat-row">
+                    <div class="stat-label"><span>FORCE / TECH MASTERY</span><span id="stat-frc-val">85</span></div>
+                    <div class="stat-track"><div id="stat-frc-bar" class="stat-fill" style="width: 85%; background: #facc15;"></div></div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Live Holo Preview, Saber Color & AI Opponent -->
+            <div class="panel-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <div class="saber-section-title">HOLO-PROJECTOR & BLADE COLOR</div>
+                    <div class="preview-box">
+                        <canvas id="preview-canvas"></canvas>
+                    </div>
+
+                    <div class="saber-section-title" style="margin-bottom: 6px;">LIGHTSABER HILT / STYLE</div>
+                    <div id="saber-style-list" class="char-grid" style="grid-template-columns: repeat(auto-fill, minmax(125px, 1fr)); margin-bottom: 10px;"></div>
+
+                    <div class="saber-section-title" style="margin-bottom: 6px;">KYBER CRYSTAL COLOR</div>
+                    <div id="saber-swatches" class="saber-swatches"></div>
+                    <div id="selected-saber-name" style="text-align: center; font-family: 'Orbitron', sans-serif; font-size: 0.82rem; color: var(--gold); margin-bottom: 10px;">
+                        STANDARD SINGLE • GUARDIAN BLUE
+                    </div>
+                    <div id="training-level-badge" style="text-align: center; font-family: 'Orbitron', sans-serif; font-size: 0.74rem; color: #38bdf8; margin-bottom: 8px;">
+                        MASTERY TIER: ATK LV.1 • SPD LV.1 • FRC LV.1
+                    </div>
+                </div>
+
+                <div style="border-top: 1px solid rgba(148,163,184,0.2); padding-top: 10px;">
+                    <div class="opponent-select-row">
+                        <label style="font-weight: 700; font-size: 0.9rem; color: #cbd5e1;">AI RIVAL:</label>
+                        <select id="opponent-select" class="sci-select"></select>
+                    </div>
+                    <div class="opponent-select-row">
+                        <label style="font-weight: 700; font-size: 0.9rem; color: #cbd5e1;">AI SKILL:</label>
+                        <select id="difficulty-select" class="sci-select">
+                            <option value="padawan">Padawan / Acolyte (Easy)</option>
+                            <option value="knight" selected>Jedi Knight / Sith Warrior (Normal)</option>
+                            <option value="master">Grand Master / Dark Lord (Hard)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 8px; font-size: 0.82rem; color: #94a3b8; text-align: center;">
+            QUICK KEYS: <strong style="color:#facc15;">A/D</strong> Move • <strong style="color:#facc15;">W</strong> Jump • <strong style="color:#facc15;">J</strong> Slash • <strong style="color:#facc15;">K</strong> Heavy • <strong style="color:#facc15;">S</strong> Block • <strong style="color:#facc15;">L</strong> Force/Blaster • <strong style="color:#facc15;">H</strong> Heal • <strong style="color:#facc15;">U</strong> All-Out (1x)
+        </div>
+
+        <div class="nav-footer">
+            <button id="btn-back-title" class="btn-sci btn-small">BACK</button>
+            <button id="btn-to-maps" class="btn-sci gold-btn">SELECT BATTLEGROUND ➔</button>
+        </div>
+    </div>
+
+    <!-- 3. MAP / ARENA SELECTION SCREEN -->
+    <div id="map-screen" class="screen">
+        <div class="setup-header">
+            <h2>SELECT BATTLEGROUND</h2>
+            <p style="color: var(--text-muted); font-size: 1rem;">Choose the iconic Star Wars arena for your duel</p>
+        </div>
+
+        <div id="map-grid" class="map-grid"></div>
+
+        <div class="nav-footer">
+            <button id="btn-back-char" class="btn-sci btn-small">◀ WARRIOR</button>
+            <button id="btn-launch-duel" class="btn-sci gold-btn">IGNITE LIGHTSABERS ⚔</button>
+        </div>
+    </div>
+
+    <!-- 3B. KYBER FORGE SHOP & TRAINING DOJO SCREEN -->
+    <div id="shop-screen" class="screen">
+        <div class="setup-header">
+            <h2>KYBER FORGE & JEDI/SITH TRAINING DOJO</h2>
+            <p style="font-family: 'Orbitron', sans-serif; color: var(--gold); font-size: 0.95rem;">
+                REPUBLIC CREDITS: <strong id="shop-credits-display">250</strong> ◈ &nbsp;|&nbsp; ACHIEVEMENTS: <strong id="shop-ach-display">0/5</strong>
+            </p>
+        </div>
+
+        <div class="char-setup-container">
+            <!-- Left: Kyber Forge Mystery Crates -->
+            <div class="panel-card">
+                <div class="saber-section-title" style="color: var(--gold);">MYSTERY HOLOCRON FORGE</div>
+                <p style="font-size: 0.88rem; color: #cbd5e1; text-align: center; margin-bottom: 12px;">
+                    Spend Republic Credits to forge random locked Lightsaber Hilts or rare Kyber Crystal Colors!
+                </p>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+                    <div class="char-card jedi" style="padding: 14px; cursor: default;">
+                        <div class="char-card-name" style="color: #38bdf8;">FORGE RANDOM HILT</div>
+                        <div class="char-card-role" style="margin: 6px 0;">Unlocks 1 random locked Lightsaber Style</div>
+                        <button id="btn-buy-saber" class="btn-sci btn-small" style="width: 100%; margin-top: 6px;">300 ◈</button>
+                    </div>
+                    <div class="char-card sith" style="padding: 14px; cursor: default;">
+                        <div class="char-card-name" style="color: #facc15;">FORGE KYBER CRYSTAL</div>
+                        <div class="char-card-role" style="margin: 6px 0;">Unlocks 1 random locked Blade Color</div>
+                        <button id="btn-buy-color" class="btn-sci gold-btn btn-small" style="width: 100%; margin-top: 6px;">200 ◈</button>
+                    </div>
+                </div>
+
+                <div id="forge-result-box" style="min-height: 44px; background: rgba(15,23,42,0.85); border: 1px dashed rgba(250,204,21,0.45); border-radius: 8px; padding: 10px; text-align: center; font-family: 'Orbitron', sans-serif; font-size: 0.82rem; color: #facc15; margin-bottom: 14px;">
+                    SELECT A FORGE OPTION ABOVE TO CRAFT NEW GEAR!
+                </div>
+
+                <div class="saber-section-title" style="font-size: 0.8rem;">COMBAT ACHIEVEMENTS TRACKER</div>
+                <div id="achievements-list" style="display: flex; flex-direction: column; gap: 6px; font-size: 0.8rem;"></div>
+            </div>
+
+            <!-- Right: Warrior Mastery Training -->
+            <div class="panel-card">
+                <div class="saber-section-title" style="color: #38bdf8;">WARRIOR MASTERY TRAINING</div>
+                <p id="dojo-char-title" style="text-align: center; font-family: 'Orbitron', sans-serif; font-size: 0.92rem; color: #ffffff; margin-bottom: 4px;">
+                    TRAINING: OBI-WAN KENOBI
+                </p>
+                <p style="font-size: 0.84rem; color: var(--text-muted); text-align: center; margin-bottom: 14px;">
+                    Invest Republic Credits to permanently raise this warrior's combat mastery (Max Lv. 5).
+                </p>
+
+                <div id="dojo-upgrades-list" style="display: flex; flex-direction: column; gap: 12px;"></div>
+            </div>
+        </div>
+
+        <div class="nav-footer">
+            <button id="btn-close-shop" class="btn-sci gold-btn">◀ RETURN TO ARMORY</button>
+        </div>
+    </div>
+
+    <!-- 3C. SUBSPACE REALTIME MULTIPLAYER LOBBY SCREEN -->
+    <div id="mp-screen" class="screen">
+        <div class="setup-header">
+            <h2>SUBSPACE REALTIME DUEL LOBBY</h2>
+            <p style="color: var(--text-muted); font-size: 0.95rem;">Host a duel, copy an invite link, or enter a 6-character Room Code to fight a friend online</p>
+        </div>
+
+        <div class="char-setup-container" style="grid-template-columns: 1fr; max-width: 560px;">
+            <!-- Hidden Supabase Project Credentials (Auto-Connected) -->
+            <div style="display: none;">
+                <input id="sb-url-input" type="text" value="https://sndanjwykdvsbvgrujos.supabase.co">
+                <input id="sb-key-input" type="password" value="sb_publishable_FtCnxqtuLaj63w1T8siM4A_LFQ8Rygf">
+            </div>
+
+            <!-- Host or Join Room -->
+            <div class="panel-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <div class="saber-section-title" style="color: var(--gold);">CREATE OR JOIN DUEL ROOM</div>
+                    <div id="mp-loadout-summary" style="text-align: center; font-size: 0.85rem; color: #38bdf8; margin-bottom: 14px; font-family: 'Orbitron', sans-serif;">
+                        EQUIPPED: OBI-WAN KENOBI • MUSTAFAR
+                    </div>
+
+                    <button id="btn-host-room" class="btn-sci gold-btn" style="width: 100%; margin-bottom: 14px;">HOST NEW DUEL ROOM</button>
+
+                    <div style="display: flex; gap: 8px; margin-bottom: 14px;">
+                        <input id="mp-room-input" type="text" maxlength="6" placeholder="ROOM CODE" style="flex: 1; text-transform: uppercase; text-align: center; letter-spacing: 0.2em; font-family: 'Orbitron', sans-serif; background: rgba(15,23,42,0.95); color: #facc15; border: 1px solid rgba(250,204,21,0.5); border-radius: 6px; padding: 10px;">
+                        <button id="btn-join-room" class="btn-sci btn-small">JOIN ROOM</button>
+                    </div>
+                </div>
+
+                <div id="mp-lobby-box" style="background: rgba(15,23,42,0.85); border: 1px dashed rgba(56,189,248,0.45); border-radius: 8px; padding: 14px; text-align: center; font-family: 'Orbitron', sans-serif; font-size: 0.82rem; color: #e2e8f0; line-height: 1.55;">
+                    CLICK <strong style="color:#facc15;">HOST NEW DUEL ROOM</strong> OR ENTER A FRIEND'S <strong style="color:#38bdf8;">ROOM CODE</strong>
+                </div>
+
+                <button id="btn-copy-room" class="btn-sci btn-small" style="display: none; width: 100%; margin-top: 10px;">📋 COPY ROOM CODE</button>
+                <button id="btn-copy-invite" class="btn-sci btn-small" style="display: none; width: 100%; margin-top: 8px; border-color: #4ade80; color: #4ade80;">
+                    🔗 COPY DIRECT INVITE LINK
+                </button>
+            </div>
+        </div>
+
+        <div class="nav-footer">
+            <button id="btn-mp-customize" class="btn-sci btn-small">⚙ EQUIP WARRIOR / MAP</button>
+            <button id="btn-mp-back" class="btn-sci btn-small">◀ BACK TO TITLE</button>
+        </div>
+    </div>
+
+    <!-- 4. COMBAT ARENA SCREEN -->
+    <div id="combat-screen" class="screen">
+        <div class="combat-top-controls">
+            <button id="btn-toggle-sound" class="hud-mini-btn">🔊 SFX: ON</button>
+            <button id="btn-quit-match" class="hud-mini-btn">✖ ABORT</button>
+        </div>
+
+        <canvas id="game-canvas"></canvas>
+
+        <!-- Persistent Desktop Key Reminder Bar -->
+        <div class="combat-key-bar">
+            <div class="key-hint"><b>A / D</b> Move / Dash</div>
+            <div class="key-hint"><b>W / SPACE</b> Jump</div>
+            <div class="key-hint"><b>J</b> Slash</div>
+            <div class="key-hint"><b>K</b> Heavy</div>
+            <div class="key-hint"><b>S</b> Block</div>
+            <div class="key-hint"><b>L</b> Force / Blaster</div>
+            <div class="key-hint"><b>H</b> Heal (50)</div>
+            <div class="key-hint"><b>U / R</b> All-Out (1x, -25%)</div>
+        </div>
+
+        <!-- Touch Controls for Mobile / Tablet -->
+        <div class="touch-controls">
+            <div class="touch-pad">
+                <button class="touch-btn" data-key="ArrowLeft">◀</button>
+                <button class="touch-btn" data-key="ArrowRight">▶</button>
+                <button class="touch-btn" data-key="ArrowUp">JUMP</button>
+            </div>
+            <div class="touch-pad">
+                <button class="touch-btn" data-key="ArrowDown">BLK</button>
+                <button class="touch-btn force" data-key="KeyH">HEAL</button>
+                <button class="touch-btn force" data-key="KeyL">SPC</button>
+                <button class="touch-btn force" data-key="KeyU" style="border-color: #facc15; color: #facc15;">ULT</button>
+                <button class="touch-btn atk" data-key="KeyK">HVY</button>
+                <button class="touch-btn atk" data-key="KeyJ">ATK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. VICTORY / DEFEAT END SCREEN -->
+    <div id="end-screen" class="screen">
+        <div id="end-subtitle" class="subtitle">DUEL CONCLUDED</div>
+        <h1 id="end-title" class="title-logo">JEDI VICTORY</h1>
+        <div id="unlock-banner" style="display: none; background: rgba(250, 204, 21, 0.16); border: 1px solid #facc15; color: #facc15; font-family: 'Orbitron', sans-serif; font-weight: 700; padding: 10px 24px; border-radius: 8px; margin-bottom: 12px; letter-spacing: 0.1em; box-shadow: 0 0 20px rgba(250, 204, 21, 0.4);">
+            ★ NEW WARRIOR UNLOCKED! ★
+        </div>
+
+        <div class="match-stats-box">
+            <div class="match-stat-line">
+                <span style="color: var(--text-muted);">VICTOR</span>
+                <strong id="stat-winner" style="color: var(--gold);">Obi-Wan Kenobi</strong>
+            </div>
+            <div class="match-stat-line">
+                <span style="color: var(--text-muted);">CREDITS EARNED</span>
+                <strong id="stat-credits" style="color: #38bdf8;">+150 ◈</strong>
+            </div>
+            <div class="match-stat-line">
+                <span style="color: var(--text-muted);">DUEL DURATION</span>
+                <strong id="stat-time">42s</strong>
+            </div>
+            <div class="match-stat-line">
+                <span style="color: var(--text-muted);">MAX COMBO</span>
+                <strong id="stat-combo">4 Hits</strong>
+            </div>
+            <div class="match-stat-line">
+                <span style="color: var(--text-muted);">SABER CLASHES</span>
+                <strong id="stat-clashes">3</strong>
+            </div>
+        </div>
+
+        <div class="nav-footer">
+            <button id="btn-rematch" class="btn-sci gold-btn">REMATCH ⚔</button>
+            <button id="btn-change-setup" class="btn-sci">CHANGE WARRIOR / MAP</button>
+        </div>
+    </div>
+
+    <!-- 6. HOLOCRON SAVE & BACKUP MODAL -->
+    <div id="save-modal" style="display: none; position: fixed; inset: 0; z-index: 60; background: rgba(2, 6, 23, 0.86); backdrop-filter: blur(8px); align-items: center; justify-content: center; padding: 16px;">
+        <div class="panel-card" style="max-width: 520px; width: 100%; text-align: center;">
+            <div class="saber-section-title" style="color: var(--gold); font-size: 1rem;">JEDI / SITH HOLOCRON SAVE VAULT</div>
+            <p style="font-size: 0.9rem; color: #cbd5e1; margin-bottom: 12px;">
+                Your wins, Republic Credits, unlocked characters, lightsabers, Kyber crystals, achievements, and Dojo Mastery levels save automatically in your browser. Use a Holocron Code below to transfer progress across devices!
+            </p>
+            <div id="save-summary-line" style="font-family: 'Orbitron', sans-serif; font-size: 0.78rem; color: #38bdf8; margin-bottom: 12px;">
+                WINS: 0 • CREDITS: 250 ◈ • ACHIEVEMENTS: 0/5
+            </div>
+            <textarea id="holocron-code-box" rows="3" placeholder="Click EXPORT CODE to generate a backup string, or paste a code here and click LOAD CODE..." style="width: 100%; background: rgba(15, 23, 42, 0.95); color: #facc15; border: 1px solid rgba(56, 189, 248, 0.45); border-radius: 8px; padding: 10px; font-family: monospace; font-size: 0.78rem; resize: none; margin-bottom: 10px;"></textarea>
+            <div id="save-modal-feedback" style="min-height: 22px; font-family: 'Orbitron', sans-serif; font-size: 0.74rem; color: #4ade80; margin-bottom: 10px;"></div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-bottom: 12px;">
+                <button id="btn-export-save" class="btn-sci btn-small">📋 EXPORT &amp; COPY CODE</button>
+                <button id="btn-import-save" class="btn-sci gold-btn btn-small">📥 LOAD CODE</button>
+                <button id="btn-reset-save" class="btn-sci sith-btn btn-small">🗑 RESET SAVE</button>
+            </div>
+            <button id="btn-close-save-modal" class="btn-sci btn-small" style="width: 100%;">CLOSE VAULT</button>
+        </div>
+    </div>
+
+<script>
+/**
+ * GALACTIC DUEL: JEDI VS. SITH
+ * Complete GitHub Pages-ready 2D Star Wars fighting game with Web Audio synthesized SFX,
+ * dynamic saber trails, clash sparks, Force powers, Mandalorian weapons, character unlocks,
+ * Kyber Forge shop, Mastery Dojo, IndexedDB auto-save, and Supabase Realtime Multiplayer.
+ */
+
+// ============================================================================
+// 1. WEB AUDIO SYNTHESIZER (Lightsaber hums, swings, clashes, Force & Rockets)
+// ============================================================================
+class SoundFX {
+    constructor() {
+        this.ctx = null;
+        this.muted = false;
+    }
+
+    init() {
+        if (!this.ctx) {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            this.ctx = new AudioContext();
+        }
+        if (this.ctx.state === 'suspended') {
+            this.ctx.resume();
+        }
+    }
+
+    toggleMute() {
+        this.muted = !this.muted;
+        return this.muted;
+    }
+
+    playIgnite() {
+        if (this.muted) return;
+        this.init();
+        const now = this.ctx.currentTime;
+
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(65, now);
+        osc.frequency.exponentialRampToValueAtTime(195, now + 0.14);
+        osc.frequency.exponentialRampToValueAtTime(115, now + 0.45);
+
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(900, now);
+
+        gain.gain.setValueAtTime(0.01, now);
+        gain.gain.linearRampToValueAtTime(0.24, now + 0.08);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.48);
+
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.5);
+    }
+
+    playSwing(heavy = false) {
+        if (this.muted) return;
+        this.init();
+        const now = this.ctx.currentTime;
+
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+
+        const baseFreq = heavy ? 95 : 130;
+        osc.frequency.setValueAtTime(baseFreq, now);
+        osc.frequency.exponentialRampToValueAtTime(baseFreq * 1.9, now + 0.09);
+        osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.75, now + 0.24);
+
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(420, now);
+
+        gain.gain.setValueAtTime(0.01, now);
+        gain.gain.linearRampToValueAtTime(heavy ? 0.28 : 0.2, now + 0.05);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.26);
+    }
+
+    playClash() {
+        if (this.muted) return;
+        this.init();
+        const now = this.ctx.currentTime;
+
+        const bufferSize = this.ctx.sampleRate * 0.25;
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+            data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (this.ctx.sampleRate * 0.06));
+        }
+
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = buffer;
+
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'highpass';
+        filter.frequency.setValueAtTime(1100, now);
+
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(0.38, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.ctx.destination);
+        noise.start(now);
+
+        const osc = this.ctx.createOscillator();
+        const oscGain = this.ctx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(520, now);
+        osc.frequency.exponentialRampToValueAtTime(110, now + 0.18);
+        oscGain.gain.setValueAtTime(0.18, now);
+        oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+        osc.connect(oscGain);
+        oscGain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.2);
+    }
+
+    playHit() {
+        if (this.muted) return;
+        this.init();
+        const now = this.ctx.currentTime;
+
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(160, now);
+        osc.frequency.exponentialRampToValueAtTime(42, now + 0.18);
+
+        gain.gain.setValueAtTime(0.35, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.19);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.2);
+    }
+
+    playBuzzsaw() {
+        if (this.muted) return;
+        this.init();
+        const now = this.ctx.currentTime;
+
+        for (let i = 0; i < 4; i++) {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sawtooth';
+            const t = now + i * 0.08;
+            osc.frequency.setValueAtTime(150 + i * 25, t);
+            osc.frequency.exponentialRampToValueAtTime(340, t + 0.05);
+            osc.frequency.exponentialRampToValueAtTime(110, t + 0.12);
+
+            gain.gain.setValueAtTime(0.16, t);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + 0.13);
+
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(t);
+            osc.stop(t + 0.14);
+        }
+    }
+
+    playRockHit(destroyed = false) {
+        if (this.muted) return;
+        this.init();
+        const now = this.ctx.currentTime;
+
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(destroyed ? 95 : 130, now);
+        osc.frequency.exponentialRampToValueAtTime(32, now + (destroyed ? 0.26 : 0.14));
+
+        gain.gain.setValueAtTime(0.32, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + (destroyed ? 0.27 : 0.15));
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.28);
+    }
+
+    playVictory() {
+        if (this.muted) return;
+        this.init();
+        const now = this.ctx.currentTime;
+        const notes = [261.63, 329.63, 392.00, 523.25];
+        notes.forEach((freq, idx) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'triangle';
+            const t = now + idx * 0.12;
+            osc.frequency.setValueAtTime(freq, t);
+            gain.gain.setValueAtTime(0.18, t);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + 0.55);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(t);
+            osc.stop(t + 0.56);
+        });
+    }
+
+    playHeal() {
+        if (this.muted) return;
+        this.init();
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(320, now);
+        osc.frequency.exponentialRampToValueAtTime(760, now + 0.42);
+        gain.gain.setValueAtTime(0.22, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.46);
+    }
+
+    playBlaster() {
+        if (this.muted) return;
+        this.init();
+        const now = this.ctx.currentTime;
+
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(980, now);
+        osc.frequency.exponentialRampToValueAtTime(160, now + 0.16);
+
+        gain.gain.setValueAtTime(0.28, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.17);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.18);
+    }
+
+    playRocket() {
+        if (this.muted) return;
+        this.init();
+        const now = this.ctx.currentTime;
+
+        const bufferSize = this.ctx.sampleRate * 0.55;
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+            data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (this.ctx.sampleRate * 0.25));
+        }
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = buffer;
+
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(650, now);
+        filter.frequency.exponentialRampToValueAtTime(120, now + 0.52);
+
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(0.4, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.54);
+
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.ctx.destination);
+        noise.start(now);
+    }
+
+    playForce(isSith = false) {
+        if (this.muted) return;
+        this.init();
+        const now = this.ctx.currentTime;
+
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = isSith ? 'sawtooth' : 'sine';
+
+        if (isSith) {
+            osc.frequency.setValueAtTime(680, now);
+            osc.frequency.linearRampToValueAtTime(220, now + 0.35);
+        } else {
+            osc.frequency.setValueAtTime(240, now);
+            osc.frequency.exponentialRampToValueAtTime(55, now + 0.35);
+        }
+
+        gain.gain.setValueAtTime(0.28, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.36);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.38);
+    }
+}
+
+const sfx = new SoundFX();
+
+// ============================================================================
+// 2. GAME DATA: CHARACTERS, LIGHTSABER CRYSTALS & MAPS
+// ============================================================================
+const CHARACTERS = {
+    jedi: [
+        {
+            id: 'jedi_guardian',
+            name: 'OBI-WAN KENOBI',
+            role: 'Master of Soresu',
+            faction: 'jedi',
+            bio: 'Legendary Jedi Master and impenetrable Form III defensive specialist.',
+            power: 84,
+            speed: 78,
+            force: 84,
+            maxHp: 245,
+            moveSpeed: 355,
+            damageMult: 1.0,
+            forceRegen: 20,
+            defaultColor: 'blue',
+            defaultStyle: 'single',
+            unlockCondition: { type: 'starter', label: 'UNLOCKED' },
+            appearance: {
+                robeMain: '#e2e8f0',
+                robeTrim: '#85583f',
+                cloak: '#5c3c28',
+                skin: '#f1c27d',
+                hairColor: '#9a3412',
+                beard: true,
+                hood: false,
+                mask: false,
+                visorColor: null
+            }
+        },
+        {
+            id: 'anakin_skywalker',
+            name: 'ANAKIN SKYWALKER',
+            role: 'The Chosen One',
+            faction: 'jedi',
+            bio: 'The Chosen One of the Force. Aggressive Form V Djem So strikes with overwhelming offensive power.',
+            power: 93,
+            speed: 82,
+            force: 88,
+            maxHp: 255,
+            moveSpeed: 375,
+            damageMult: 1.08,
+            forceRegen: 19,
+            defaultColor: 'blue',
+            defaultStyle: 'single',
+            unlockCondition: { type: 'defeat', targetId: 'anakin_skywalker', label: 'DEFEAT IN DUEL' },
+            appearance: {
+                robeMain: '#3f2e21',
+                robeTrim: '#1c1917',
+                cloak: '#291d14',
+                skin: '#f1c27d',
+                hairColor: '#451a03',
+                scar: true,
+                hood: false,
+                mask: false,
+                visorColor: null
+            }
+        },
+        {
+            id: 'qui_gon',
+            name: 'QUI-GON JINN',
+            role: 'Living Force Maverick',
+            faction: 'jedi',
+            bio: 'Wise Jedi Master attuned to the Living Force with rapid energy recovery and heavy Form IV strikes.',
+            power: 88,
+            speed: 80,
+            force: 93,
+            maxHp: 250,
+            moveSpeed: 365,
+            damageMult: 1.05,
+            forceRegen: 26,
+            defaultColor: 'green',
+            defaultStyle: 'single',
+            unlockCondition: { type: 'wins', count: 2, label: '2 TOTAL WINS' },
+            appearance: {
+                robeMain: '#d6c7b2',
+                robeTrim: '#654321',
+                cloak: '#4a3219',
+                skin: '#f1c27d',
+                hairColor: '#5c4033',
+                beard: true,
+                hood: false,
+                mask: false,
+                visorColor: null
+            }
+        },
+        {
+            id: 'ahsoka_tano',
+            name: 'AHSOKA TANO',
+            role: 'Fulcrum Duelist',
+            faction: 'jedi',
+            bio: 'Agile Togruta warrior famed for reverse-grip Jar’Kai twin-saber acrobatics.',
+            power: 89,
+            speed: 96,
+            force: 87,
+            maxHp: 235,
+            moveSpeed: 440,
+            damageMult: 1.04,
+            forceRegen: 23,
+            defaultColor: 'white',
+            defaultStyle: 'shoto_dual',
+            unlockCondition: { type: 'achievement', achId: 'combo_master', label: 'ACHIEVEMENT: 6+ HIT COMBO' },
+            appearance: {
+                robeMain: '#334155',
+                robeTrim: '#94a3b8',
+                cloak: '#1e293b',
+                skin: '#ea580c',
+                togruta: true,
+                hood: false,
+                mask: false,
+                visorColor: null
+            }
+        },
+        {
+            id: 'the_mandalorian',
+            name: 'THE MANDALORIAN',
+            role: 'Beskar Bounty Hunter',
+            faction: 'jedi',
+            isMando: true,
+            bio: 'Din Djarin in pure Beskar armor. Fires heavy IB-94 blaster bolts instead of Force and launches a Jetpack Rocket All-Out Attack!',
+            power: 91,
+            speed: 86,
+            force: 85,
+            maxHp: 265,
+            moveSpeed: 380,
+            damageMult: 1.06,
+            forceRegen: 24,
+            defaultColor: 'darksaber',
+            defaultStyle: 'darksaber',
+            unlockCondition: { type: 'wins', count: 4, bonusStyle: 'darksaber', label: '4 TOTAL WINS (+DARKSABER)' },
+            appearance: {
+                robeMain: '#94a3b8',
+                robeTrim: '#475569',
+                cloak: '#334155',
+                skin: '#cbd5e1',
+                hood: false,
+                mask: true,
+                visorColor: '#020617'
+            }
+        },
+        {
+            id: 'mace_windu',
+            name: 'MACE WINDU',
+            role: 'Master of Vaapad',
+            faction: 'jedi',
+            bio: 'Champion of the Jedi Order. Channels inner darkness into lethal Form VII Vaapad strikes.',
+            power: 95,
+            speed: 80,
+            force: 86,
+            maxHp: 250,
+            moveSpeed: 365,
+            damageMult: 1.1,
+            forceRegen: 18,
+            defaultColor: 'purple',
+            defaultStyle: 'shoto_dual',
+            unlockCondition: { type: 'wins', count: 6, bonusStyle: 'shoto_dual', label: '6 TOTAL WINS (+DUAL WIELD)' },
+            appearance: {
+                robeMain: '#e7e5e4',
+                robeTrim: '#78350f',
+                cloak: '#451a03',
+                skin: '#5c3a21',
+                bald: true,
+                hood: false,
+                mask: false,
+                visorColor: null
+            }
+        },
+        {
+            id: 'master_yoda',
+            name: 'MASTER YODA',
+            role: 'Grand Master',
+            faction: 'jedi',
+            isYoda: true,
+            bio: '900-year-old Jedi Grand Master. Tiny stature, lightning-fast Form IV Ataru flips, and supreme Force mastery.',
+            power: 82,
+            speed: 99,
+            force: 99,
+            maxHp: 215,
+            moveSpeed: 465,
+            damageMult: 0.96,
+            forceRegen: 28,
+            defaultColor: 'green',
+            defaultStyle: 'single',
+            unlockCondition: { type: 'achievement', achId: 'force_only', label: 'ACHIEVEMENT: FORCE ONLY WIN' },
+            appearance: {
+                robeMain: '#d6c7b2',
+                robeTrim: '#785a3c',
+                cloak: '#57412b',
+                skin: '#65a30d',
+                ears: true,
+                hood: false,
+                mask: false,
+                visorColor: null
+            }
+        }
+    ],
+    sith: [
+        {
+            id: 'kylo_ren',
+            name: 'KYLO REN',
+            role: 'Master of Ren',
+            faction: 'sith',
+            isKylo: true,
+            bio: 'Supreme Leader of the Knights of Ren with crushing Force Stasis and aggressive dark-side strikes.',
+            power: 94,
+            speed: 78,
+            force: 90,
+            maxHp: 260,
+            moveSpeed: 350,
+            damageMult: 1.1,
+            forceRegen: 20,
+            defaultColor: 'red',
+            defaultStyle: 'crossguard',
+            unlockCondition: { type: 'starter', label: 'UNLOCKED' },
+            appearance: {
+                robeMain: '#18181b',
+                robeTrim: '#52525b',
+                cloak: '#09090b',
+                skin: '#cbd5e1',
+                hood: true,
+                mask: true,
+                visorColor: '#94a3b8'
+            }
+        },
+        {
+            id: 'count_dooku',
+            name: 'COUNT DOOKU',
+            role: 'Darth Tyranus',
+            faction: 'sith',
+            bio: 'Aristocratic Sith Lord and unmatched Form II Makashi fencing duelist with surgical precision.',
+            power: 90,
+            speed: 85,
+            force: 94,
+            maxHp: 245,
+            moveSpeed: 385,
+            damageMult: 1.08,
+            forceRegen: 24,
+            defaultColor: 'red',
+            defaultStyle: 'curved_hilt',
+            unlockCondition: { type: 'wins', count: 3, bonusStyle: 'curved_hilt', label: '3 TOTAL WINS (+CURVED HILT)' },
+            appearance: {
+                robeMain: '#1e1b18',
+                robeTrim: '#7f1d1d',
+                cloak: '#450a0a',
+                skin: '#f1c27d',
+                hairColor: '#e2e8f0',
+                beard: true,
+                hood: false,
+                mask: false,
+                visorColor: null
+            }
+        },
+        {
+            id: 'darth_maul',
+            name: 'DARTH MAUL',
+            role: 'Sith Assassin',
+            faction: 'sith',
+            isMaul: true,
+            bio: 'Dathomirian Zabrak Sith Lord known for relentless acrobatic fury and martial precision.',
+            power: 91,
+            speed: 94,
+            force: 82,
+            maxHp: 240,
+            moveSpeed: 425,
+            damageMult: 1.06,
+            forceRegen: 19,
+            defaultColor: 'red',
+            defaultStyle: 'double_bladed',
+            unlockCondition: { type: 'defeat', targetId: 'darth_maul', bonusStyle: 'double_bladed', label: 'DEFEAT IN DUEL (+SABERSTAFF)' },
+            appearance: {
+                robeMain: '#09090b',
+                robeTrim: '#dc2626',
+                cloak: '#000000',
+                skin: '#dc2626',
+                horns: true,
+                hood: false,
+                mask: false,
+                visorColor: '#facc15'
+            }
+        },
+        {
+            id: 'general_grievous',
+            name: 'GENERAL GRIEVOUS',
+            role: 'Cyborg Supreme',
+            faction: 'sith',
+            isGrievous: true,
+            bio: 'Cyborg Supreme Commander of the Droid Army. Capable of splitting into 4 mechanical arms!',
+            power: 94,
+            speed: 86,
+            force: 82,
+            maxHp: 275,
+            moveSpeed: 390,
+            damageMult: 1.04,
+            forceRegen: 20,
+            defaultColor: 'grievous_trophy',
+            defaultStyle: 'grievous_four',
+            unlockCondition: { type: 'wins', count: 7, bonusStyle: 'grievous_four', label: '7 TOTAL WINS (+4-BLADE)' },
+            appearance: {
+                robeMain: '#e2e8f0',
+                robeTrim: '#64748b',
+                cloak: '#1e293b',
+                skin: '#cbd5e1',
+                hood: false,
+                mask: true,
+                visorColor: '#facc15'
+            }
+        },
+        {
+            id: 'sith_lord',
+            name: 'DARTH VADER',
+            role: 'Dark Lord of Sith',
+            faction: 'sith',
+            bio: 'Commands overwhelming Dark Side fury. Heavy durasteel armor and crushing one-handed lightsaber strikes.',
+            power: 96,
+            speed: 68,
+            force: 92,
+            maxHp: 280,
+            moveSpeed: 320,
+            damageMult: 1.12,
+            forceRegen: 20,
+            defaultColor: 'red',
+            defaultStyle: 'single',
+            unlockCondition: { type: 'wins', count: 10, label: '10 TOTAL WINS' },
+            appearance: {
+                robeMain: '#18181b',
+                robeTrim: '#991b1b',
+                cloak: '#09090b',
+                skin: '#cbd5e1',
+                hood: false,
+                mask: true,
+                visorColor: '#ef4444'
+            }
+        }
+    ]
+};
+
+const SABER_STYLES = [
+    {
+        id: 'single',
+        name: 'SINGLE HILT',
+        desc: 'Classic balanced Jedi/Sith hilt.',
+        unlockCondition: { type: 'starter', label: 'UNLOCKED' }
+    },
+    {
+        id: 'crossguard',
+        name: 'CROSSGUARD',
+        desc: 'Cracked crystal vents with twin side quillons.',
+        unlockCondition: { type: 'starter', label: 'UNLOCKED' }
+    },
+    {
+        id: 'curved_hilt',
+        name: 'CURVED MAKASHI',
+        desc: 'Angled fencing grip for extended precision reach.',
+        unlockCondition: { type: 'wins', count: 3, label: '3 WINS OR FORGE' }
+    },
+    {
+        id: 'switchblade',
+        name: 'SWITCHBLADE',
+        desc: 'Hinged Temple Guard folding twin-pike saber.',
+        unlockCondition: { type: 'achievement', achId: 'flawless_defense', label: '85%+ HP WIN OR FORGE' }
+    },
+    {
+        id: 'darksaber',
+        name: 'DARKSABER',
+        desc: 'Ancient black-plasma Mandalorian flat blade.',
+        unlockCondition: { type: 'wins', count: 4, label: '4 WINS OR FORGE' }
+    },
+    {
+        id: 'broad_claymore',
+        name: 'GREAT CLAYMORE',
+        desc: 'Extra-wide heavy plasma greatsword blade.',
+        unlockCondition: { type: 'achievement', achId: 'no_ult_win', label: 'WIN WITHOUT ULT OR FORGE' }
+    },
+    {
+        id: 'shoto_dual',
+        name: 'DUAL SHOTO',
+        desc: 'Wield two lightsabers simultaneously (Ahsoka style).',
+        unlockCondition: { type: 'wins', count: 6, label: '6 WINS OR FORGE' }
+    },
+    {
+        id: 'double_bladed',
+        name: 'SABERSTAFF',
+        desc: 'Lethal double-bladed Sith staff.',
+        unlockCondition: { type: 'defeat', targetId: 'darth_maul', label: 'DEFEAT MAUL OR FORGE' }
+    },
+    {
+        id: 'grievous_four',
+        name: '4-BLADE QUAD',
+        desc: '4 spinning blades + unlocks Quad-Blade Buzzsaw!',
+        unlockCondition: { type: 'wins', count: 7, label: '7 WINS OR FORGE' }
+    },
+    {
+        id: 'force_pike',
+        name: 'GRAND INQUISITOR',
+        desc: 'Spinning ring-emitter Sith inquisitor blade.',
+        unlockCondition: { type: 'achievement', achId: 'force_only', label: 'FORCE ONLY WIN OR FORGE' }
+    }
+];
+
+const SABER_COLORS = [
+    { id: 'blue', name: 'Guardian Blue', core: '#ffffff', glow: '#0ea5e9', starter: true },
+    { id: 'red', name: 'Crimson Sith', core: '#ffffff', glow: '#ef4444', starter: true },
+    { id: 'green', name: 'Consular Green', core: '#ffffff', glow: '#22c55e', unlockLabel: '2 WINS OR FORGE' },
+    { id: 'yellow', name: 'Sentinel Yellow', core: '#ffffff', glow: '#eab308', unlockLabel: 'FORGE OR SPEEDRUN' },
+    { id: 'purple', name: 'Amethyst Purple', core: '#ffffff', glow: '#a855f7', unlockLabel: '6 WINS OR FORGE' },
+    { id: 'white', name: 'Purified White', core: '#ffffff', glow: '#e2e8f0', unlockLabel: 'COMBO ACHIEVEMENT OR FORGE' },
+    { id: 'orange', name: 'Solar Orange', core: '#ffffff', glow: '#f97316', unlockLabel: 'FORGE CRATE' },
+    { id: 'darksaber', name: 'Mandalorian Darksaber', core: '#020617', glow: '#f8fafc', isDarksaber: true, unlockLabel: '4 WINS OR FORGE' },
+    { id: 'grievous_trophy', name: 'Trophy Dual (Blue/Green)', core: '#ffffff', glow: '#0ea5e9', secondaryGlow: '#22c55e', unlockLabel: '7 WINS OR FORGE' }
+];
+
+const ACHIEVEMENTS_DEF = [
+    { id: 'force_only', name: 'WAY OF THE FORCE', desc: 'Win a duel without landing a melee lightsaber strike.' },
+    { id: 'flawless_defense', name: 'UNTOUCHABLE MASTER', desc: 'Win a duel with 85% or more HP remaining.' },
+    { id: 'combo_master', name: 'BLADE DANCER', desc: 'Land a 6-hit or higher lightsaber combo in a duel.' },
+    { id: 'speedrunner', name: 'LIGHTSPEED DUELIST', desc: 'Defeat your opponent in under 30 seconds.' },
+    { id: 'no_ult_win', name: 'PURE TECHNIQUE', desc: 'Win a duel without using your All-Out Ultimate.' }
+];
+
+const MAPS = [
+    {
+        id: 'mustafar',
+        name: 'Mustafar Lava Refinery',
+        desc: 'Scorching industrial catwalks suspended above churning rivers of molten magma.',
+        skyTop: '#1a0502',
+        skyBottom: '#6b1406',
+        accent: '#f97316',
+        floorColor: '#1e1b18',
+        floorTrim: '#f97316',
+        platforms: [
+            { x: 0.18, y: 0.63, w: 0.22, h: 16 },
+            { x: 0.60, y: 0.63, w: 0.22, h: 16 },
+            { x: 0.39, y: 0.46, w: 0.22, h: 16 }
+        ]
+    },
+    {
+        id: 'naboo',
+        name: 'Naboo Plasma Reactor',
+        desc: 'Monumental Theed power complex with towering laser gates and humming plasma shafts.',
+        skyTop: '#031525',
+        skyBottom: '#0c3b5e',
+        accent: '#38bdf8',
+        floorColor: '#1e293b',
+        floorTrim: '#38bdf8',
+        platforms: [
+            { x: 0.14, y: 0.65, w: 0.24, h: 16 },
+            { x: 0.62, y: 0.65, w: 0.24, h: 16 },
+            { x: 0.38, y: 0.48, w: 0.24, h: 16 }
+        ]
+    },
+    {
+        id: 'bespin',
+        name: 'Cloud City Carbon Chamber',
+        desc: 'Atmospheric freezing facility bathed in glowing amber mist and industrial steam.',
+        skyTop: '#1c0f08',
+        skyBottom: '#7c3412',
+        accent: '#fb923c',
+        floorColor: '#171c26',
+        floorTrim: '#fb923c',
+        platforms: [
+            { x: 0.22, y: 0.62, w: 0.56, h: 16 },
+            { x: 0.10, y: 0.45, w: 0.18, h: 16 },
+            { x: 0.72, y: 0.45, w: 0.18, h: 16 }
+        ]
+    },
+    {
+        id: 'death_star',
+        name: 'Death Star II Throne Room',
+        desc: 'The Emperor’s sinister observation spire overlooking the Battle of Endor.',
+        skyTop: '#02040a',
+        skyBottom: '#0f172a',
+        accent: '#ef4444',
+        floorColor: '#090d16',
+        floorTrim: '#64748b',
+        platforms: [
+            { x: 0.15, y: 0.64, w: 0.25, h: 16 },
+            { x: 0.60, y: 0.64, w: 0.25, h: 16 },
+            { x: 0.35, y: 0.47, w: 0.30, h: 16 }
+        ]
+    },
+    {
+        id: 'mandalore',
+        name: 'Mandalore Sundari Forge',
+        desc: 'Ancient Beskar smelting halls bathed in emerald dome light and molten Mandalorian steel.',
+        skyTop: '#041f1e',
+        skyBottom: '#115e59',
+        accent: '#2dd4bf',
+        floorColor: '#1e293b',
+        floorTrim: '#2dd4bf',
+        platforms: [
+            { x: 0.12, y: 0.63, w: 0.22, h: 16 },
+            { x: 0.66, y: 0.63, w: 0.22, h: 16 },
+            { x: 0.37, y: 0.46, w: 0.26, h: 16 }
+        ]
+    },
+    {
+        id: 'tatooine',
+        name: 'Tatooine Dune Sea',
+        desc: 'Sun-scorched twin-sun desert dunes beside a weathered sandstone moisture skiff.',
+        skyTop: '#451a03',
+        skyBottom: '#d97706',
+        accent: '#facc15',
+        floorColor: '#92400e',
+        floorTrim: '#fbbf24',
+        platforms: [
+            { x: 0.18, y: 0.64, w: 0.24, h: 16 },
+            { x: 0.58, y: 0.64, w: 0.24, h: 16 },
+            { x: 0.38, y: 0.48, w: 0.24, h: 16 }
+        ]
+    }
+];
+
+// ============================================================================
+// 3. GAME STATE, HOLOCRON INDEXEDDB PROGRESSION & SUPABASE REALTIME CONFIG
+// ============================================================================
+const DEFAULT_SUPABASE_URL = 'https://sndanjwykdvsbvgrujos.supabase.co';
+const DEFAULT_SUPABASE_ANON_KEY = 'sb_publishable_FtCnxqtuLaj63w1T8siM4A_LFQ8Rygf';
+
+const mp = {
+    client: null,
+    channel: null,
+    connected: false,
+    active: false,
+    roomCode: '',
+    isHost: false,
+    lastSendTime: 0,
+    lastMatchPayload: null
+};
+
+const defaultProgress = {
+    wins: 0,
+    credits: 250,
+    defeatedIds: [],
+    achievements: [],
+    unlockedSabers: ['single', 'crossguard'],
+    unlockedColors: ['blue', 'red'],
+    training: {}
+};
+
+let playerProgress = JSON.parse(JSON.stringify(defaultProgress));
+let resetConfirmArmed = false;
+
+function openHolocronDB() {
+    return new Promise((resolve, reject) => {
+        if (!window.indexedDB) {
+            reject(new Error('IndexedDB unavailable'));
+            return;
+        }
+        const req = window.indexedDB.open('GalacticDuelHolocronDB', 1);
+        req.onupgradeneeded = (e) => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains('profiles')) {
+                db.createObjectStore('profiles', { keyPath: 'id' });
+            }
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+    });
+}
+
+function updateSaveIndicators(label = '● HOLOCRON PROGRESS SAVED') {
+    const el = document.getElementById('global-save-status');
+    if (el) {
+        el.textContent = label;
+        el.style.color = '#4ade80';
+    }
+    const sumEl = document.getElementById('save-summary-line');
+    if (sumEl) {
+        sumEl.textContent = `WINS: ${playerProgress.wins} • CREDITS: ${playerProgress.credits} ◈ • ACHIEVEMENTS: ${playerProgress.achievements.length}/${ACHIEVEMENTS_DEF.length}`;
+    }
+}
+
+async function loadProgress() {
+    try {
+        const db = await openHolocronDB();
+        const tx = db.transaction('profiles', 'readonly');
+        const store = tx.objectStore('profiles');
+        const req = store.get('main_pilot');
+        req.onsuccess = () => {
+            if (req.result && req.result.data) {
+                playerProgress = Object.assign({}, defaultProgress, req.result.data);
+                renderSetupUI();
+                updateSaveIndicators('● HOLOCRON SAVE LOADED');
+            }
+        };
+    } catch (e) {
+        updateSaveIndicators('● SESSION SAVE READY');
+    }
+}
+
+async function saveProgress() {
+    updateSaveIndicators('● SAVING PROGRESS...');
+    try {
+        const db = await openHolocronDB();
+        const tx = db.transaction('profiles', 'readwrite');
+        const store = tx.objectStore('profiles');
+        store.put({ id: 'main_pilot', updatedAt: Date.now(), data: playerProgress });
+        tx.oncomplete = () => updateSaveIndicators('● HOLOCRON PROGRESS SAVED ✔');
+    } catch (e) {
+        updateSaveIndicators('● PROGRESS SAVED IN SESSION');
+    }
+}
+
+function encodeHolocronCode() {
+    const json = JSON.stringify(playerProgress);
+    return 'GD1:' + btoa(unescape(encodeURIComponent(json)));
+}
+
+function decodeHolocronCode(codeStr) {
+    const trimmed = (codeStr || '').trim();
+    if (!trimmed.startsWith('GD1:')) throw new Error('Invalid Holocron Save Code prefix');
+    const json = decodeURIComponent(escape(atob(trimmed.slice(4))));
+    const parsed = JSON.parse(json);
+    if (typeof parsed !== 'object' || parsed === null) throw new Error('Corrupted save payload');
+    return Object.assign({}, defaultProgress, parsed);
+}
+
+function getAllCharacters() {
+    return [...CHARACTERS.jedi, ...CHARACTERS.sith];
+}
+
+function findCharById(id) {
+    return getAllCharacters().find(c => c.id === id) || CHARACTERS.jedi[0];
+}
+
+function getCharTraining(charId) {
+    if (!playerProgress.training[charId]) {
+        playerProgress.training[charId] = { atk: 1, spd: 1, frc: 1 };
+    }
+    return playerProgress.training[charId];
+}
+
+function isCharacterUnlocked(char) {
+    const cond = char.unlockCondition;
+    if (!cond || cond.type === 'starter') return true;
+    if (cond.type === 'wins') return playerProgress.wins >= cond.count;
+    if (cond.type === 'defeat') return playerProgress.defeatedIds.includes(cond.targetId);
+    if (cond.type === 'achievement') return playerProgress.achievements.includes(cond.achId);
+    return false;
+}
+
+function isSaberStyleUnlocked(style) {
+    if (playerProgress.unlockedSabers.includes(style.id)) return true;
+    const cond = style.unlockCondition;
+    if (!cond || cond.type === 'starter') return true;
+    if (cond.type === 'wins') return playerProgress.wins >= cond.count;
+    if (cond.type === 'defeat') return playerProgress.defeatedIds.includes(cond.targetId);
+    if (cond.type === 'achievement') return playerProgress.achievements.includes(cond.achId);
+    return false;
+}
+
+function isColorUnlocked(color) {
+    if (color.starter || playerProgress.unlockedColors.includes(color.id)) return true;
+    if (color.id === 'green' && playerProgress.wins >= 2) return true;
+    if (color.id === 'darksaber' && playerProgress.wins >= 4) return true;
+    if (color.id === 'purple' && playerProgress.wins >= 6) return true;
+    if (color.id === 'grievous_trophy' && playerProgress.wins >= 7) return true;
+    if (color.id === 'yellow' && playerProgress.achievements.includes('speedrunner')) return true;
+    if (color.id === 'white' && playerProgress.achievements.includes('combo_master')) return true;
+    return false;
+}
+
+const state = {
+    activeFactionTab: 'jedi',
+    selectedCharId: 'jedi_guardian',
+    selectedSaberStyleId: 'single',
+    selectedSaberColorId: 'blue',
+    opponentId: 'kylo_ren',
+    difficulty: 'knight',
+    selectedMapId: 'mustafar',
+    inCombat: false,
+    introTimer: 0,
+    victoryTimer: 0,
+    victoryWinner: null,
+    cameraZoom: 1,
+    cameraFocusX: 0,
+    cameraFocusY: 0,
+    roundTime: 150,
+    elapsedTime: 0,
+    screenShake: 0,
+    clashCount: 0,
+    playerMaxCombo: 0,
+    playerLandedMelee: false,
+    playerUsedUltimate: false,
+    particles: [],
+    projectiles: [],
+    floatingTexts: [],
+    rocks: [],
+    platforms: [],
+    floorY: 0,
+    player: null,
+    enemy: null
+};
+
+// ============================================================================
+// 4. STARFIELD & SCREEN NAVIGATION
+// ============================================================================
+const starCanvas = document.getElementById('starfield');
+const starCtx = starCanvas.getContext('2d');
+let stars = [];
+
+function initStarfield() {
+    starCanvas.width = window.innerWidth;
+    starCanvas.height = window.innerHeight;
+    stars = Array.from({ length: 130 }, () => ({
+        x: Math.random() * starCanvas.width,
+        y: Math.random() * starCanvas.height,
+        r: Math.random() * 1.8 + 0.3,
+        speed: Math.random() * 0.25 + 0.05,
+        alpha: Math.random() * 0.8 + 0.2
+    }));
+}
+
+function renderStarfield() {
+    starCtx.clearRect(0, 0, starCanvas.width, starCanvas.height);
+    for (const s of stars) {
+        s.y += s.speed;
+        if (s.y > starCanvas.height) {
+            s.y = 0;
+            s.x = Math.random() * starCanvas.width;
+        }
+        starCtx.fillStyle = `rgba(226, 232, 240, ${s.alpha})`;
+        starCtx.beginPath();
+        starCtx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        starCtx.fill();
+    }
+}
+
+function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+    const target = document.getElementById(id);
+    if (target) target.classList.add('active');
+    if (id === 'char-screen') renderSetupUI();
+    if (id === 'map-screen') renderMapSelection();
+    if (id === 'shop-screen') renderShopAndDojo();
+    if (id === 'mp-screen') {
+        updateMultiplayerLoadoutBanner();
+        if (!mp.connected) {
+            connectSupabaseClient(DEFAULT_SUPABASE_URL, DEFAULT_SUPABASE_ANON_KEY);
+        }
+    }
+}
+
+function updateMultiplayerLoadoutBanner() {
+    const ch = findCharById(state.selectedCharId);
+    const mpMap = MAPS.find(m => m.id === state.selectedMapId) || MAPS[0];
+    const banner = document.getElementById('mp-loadout-summary');
+    if (banner) {
+        banner.textContent = `EQUIPPED: ${ch.name} • ${mpMap.name.toUpperCase()}`;
+    }
+}
+
+// ============================================================================
+// 5. CUSTOMIZATION, SHOP, DOJO & MAP SELECTION UI
+// ============================================================================
+function renderSetupUI() {
+    document.getElementById('wins-counter').textContent = playerProgress.wins;
+    document.getElementById('credits-counter').textContent = playerProgress.credits;
+
+    const listEl = document.getElementById('character-list');
+    listEl.innerHTML = '';
+    const roster = CHARACTERS[state.activeFactionTab];
+
+    roster.forEach(char => {
+        const unlocked = isCharacterUnlocked(char);
+        const card = document.createElement('div');
+        card.className = `char-card ${char.faction} ${state.selectedCharId === char.id ? 'selected' : ''} ${unlocked ? '' : 'locked'}`;
+        card.innerHTML = `
+            <div class="char-card-name">${char.name}</div>
+            <div class="char-card-role">${char.role}</div>
+            <div class="unlock-badge" style="color:${unlocked ? '#4ade80' : '#facc15'};">${unlocked ? '★ READY' : '🔒 ' + char.unlockCondition.label}</div>
+        `;
+        card.onclick = () => {
+            if (!unlocked) {
+                sfx.playHit();
+                return;
+            }
+            state.selectedCharId = char.id;
+            const defStyle = SABER_STYLES.find(s => s.id === char.defaultStyle);
+            if (defStyle && isSaberStyleUnlocked(defStyle)) {
+                state.selectedSaberStyleId = char.defaultStyle;
+            }
+            const defCol = SABER_COLORS.find(c => c.id === char.defaultColor);
+            if (defCol && isColorUnlocked(defCol)) {
+                state.selectedSaberColorId = char.defaultColor;
+            }
+            sfx.playIgnite();
+            renderSetupUI();
+        };
+        listEl.appendChild(card);
+    });
+
+    const selectedChar = findCharById(state.selectedCharId);
+    const tr = getCharTraining(selectedChar.id);
+    document.getElementById('char-bio').textContent = selectedChar.bio;
+
+    const atkVal = Math.min(100, selectedChar.power + (tr.atk - 1) * 3);
+    const spdVal = Math.min(100, selectedChar.speed + (tr.spd - 1) * 3);
+    const frcVal = Math.min(100, selectedChar.force + (tr.frc - 1) * 3);
+
+    document.getElementById('stat-atk-val').textContent = atkVal;
+    document.getElementById('stat-atk-bar').style.width = atkVal + '%';
+    document.getElementById('stat-spd-val').textContent = spdVal;
+    document.getElementById('stat-spd-bar').style.width = spdVal + '%';
+    document.getElementById('stat-frc-val').textContent = frcVal;
+    document.getElementById('stat-frc-bar').style.width = frcVal + '%';
+    document.getElementById('training-level-badge').textContent = `MASTERY TIER: ATK LV.${tr.atk} • SPD LV.${tr.spd} • FRC LV.${tr.frc}`;
+
+    // Saber styles
+    const styleEl = document.getElementById('saber-style-list');
+    styleEl.innerHTML = '';
+    SABER_STYLES.forEach(st => {
+        const unlocked = isSaberStyleUnlocked(st);
+        const card = document.createElement('div');
+        card.className = `char-card ${selectedChar.faction} ${state.selectedSaberStyleId === st.id ? 'selected' : ''} ${unlocked ? '' : 'locked'}`;
+        card.style.padding = '8px 6px';
+        card.innerHTML = `
+            <div class="char-card-name" style="font-size:0.74rem;">${st.name}</div>
+            <div class="unlock-badge" style="font-size:0.62rem; color:${unlocked ? '#38bdf8' : '#facc15'};">${unlocked ? 'EQUIPPED / READY' : '🔒 ' + st.unlockCondition.label}</div>
+        `;
+        card.onclick = () => {
+            if (!unlocked) {
+                sfx.playHit();
+                return;
+            }
+            state.selectedSaberStyleId = st.id;
+            sfx.playIgnite();
+            renderSetupUI();
+        };
+        styleEl.appendChild(card);
+    });
+
+    // Saber color swatches
+    const swatchEl = document.getElementById('saber-swatches');
+    swatchEl.innerHTML = '';
+    SABER_COLORS.forEach(col => {
+        const unlocked = isColorUnlocked(col);
+        const sw = document.createElement('div');
+        sw.className = `swatch ${state.selectedSaberColorId === col.id ? 'active' : ''}`;
+        sw.style.background = col.isDarksaber
+            ? 'radial-gradient(circle, #020617 45%, #ffffff 100%)'
+            : `radial-gradient(circle, #ffffff 25%, ${col.glow} 85%)`;
+        sw.style.boxShadow = `0 0 12px ${col.glow}`;
+        sw.style.opacity = unlocked ? '1' : '0.32';
+        sw.title = unlocked ? col.name : `Locked: ${col.unlockLabel}`;
+        if (!unlocked) {
+            sw.innerHTML = '<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;">🔒</span>';
+        }
+        sw.onclick = () => {
+            if (!unlocked) {
+                sfx.playHit();
+                return;
+            }
+            state.selectedSaberColorId = col.id;
+            sfx.playIgnite();
+            renderSetupUI();
+        };
+        swatchEl.appendChild(sw);
+    });
+
+    const curStyle = SABER_STYLES.find(s => s.id === state.selectedSaberStyleId) || SABER_STYLES[0];
+    const curCol = SABER_COLORS.find(c => c.id === state.selectedSaberColorId) || SABER_COLORS[0];
+    document.getElementById('selected-saber-name').textContent = `${curStyle.name} • ${curCol.name.toUpperCase()}`;
+
+    // Populate AI opponent dropdown
+    const oppSelect = document.getElementById('opponent-select');
+    const prevOpp = oppSelect.value || state.opponentId;
+    oppSelect.innerHTML = '';
+    getAllCharacters().forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        opt.textContent = `${c.name} (${c.faction === 'jedi' ? 'Jedi/Mando' : 'Sith/Separatist'})`;
+        oppSelect.appendChild(opt);
+    });
+    oppSelect.value = getAllCharacters().some(c => c.id === prevOpp) ? prevOpp : 'kylo_ren';
+    state.opponentId = oppSelect.value;
+}
+
+function renderShopAndDojo() {
+    document.getElementById('shop-credits-display').textContent = playerProgress.credits;
+    document.getElementById('shop-ach-display').textContent = `${playerProgress.achievements.length}/${ACHIEVEMENTS_DEF.length}`;
+
+    const achList = document.getElementById('achievements-list');
+    achList.innerHTML = '';
+    ACHIEVEMENTS_DEF.forEach(a => {
+        const done = playerProgress.achievements.includes(a.id);
+        const row = document.createElement('div');
+        row.style.cssText = `padding:6px 10px; border-radius:6px; background:rgba(15,23,42,0.8); border:1px solid ${done ? 'rgba(74,222,128,0.45)' : 'rgba(148,163,184,0.2)'}; display:flex; justify-content:space-between; align-items:center; gap:8px;`;
+        row.innerHTML = `
+            <div>
+                <div style="font-family:'Orbitron',sans-serif; color:${done ? '#4ade80' : '#e2e8f0'}; font-size:0.74rem;">${done ? '✔' : '○'} ${a.name}</div>
+                <div style="color:#94a3b8; font-size:0.76rem;">${a.desc}</div>
+            </div>
+            <span style="font-family:'Orbitron',sans-serif; font-size:0.68rem; color:${done ? '#4ade80' : '#facc15'};">${done ? 'COMPLETE' : 'LOCKED'}</span>
+        `;
+        achList.appendChild(row);
+    });
+
+    const selectedChar = findCharById(state.selectedCharId);
+    const tr = getCharTraining(selectedChar.id);
+    document.getElementById('dojo-char-title').textContent = `TRAINING: ${selectedChar.name}`;
+
+    const dojoList = document.getElementById('dojo-upgrades-list');
+    dojoList.innerHTML = '';
+    const statsMeta = [
+        { key: 'atk', title: 'SABER FORM MASTERY', desc: '+7% Lightsaber & Special Damage per level', color: '#38bdf8' },
+        { key: 'spd', title: 'FORCE AGILITY & VITALITY', desc: '+22 Max HP & +18 Movement Speed per level', color: '#22c55e' },
+        { key: 'frc', title: 'MEDITATION & CHANNELING', desc: '+4 Force/Energy Regen per second per level', color: '#facc15' }
+    ];
+
+    statsMeta.forEach(sm => {
+        const lvl = tr[sm.key] || 1;
+        const cost = lvl * 150;
+        const maxed = lvl >= 5;
+        const card = document.createElement('div');
+        card.style.cssText = 'background:rgba(15,23,42,0.85); border:1px solid rgba(148,163,184,0.25); border-radius:10px; padding:12px; display:flex; justify-content:space-between; align-items:center; gap:10px;';
+        card.innerHTML = `
+            <div>
+                <div style="font-family:'Orbitron',sans-serif; font-size:0.82rem; color:${sm.color};">${sm.title} (LV. ${lvl}/5)</div>
+                <div style="font-size:0.8rem; color:#cbd5e1;">${sm.desc}</div>
+            </div>
+            <button class="btn-sci btn-small" ${maxed ? 'disabled' : ''}>${maxed ? 'MAXED' : cost + ' ◈'}</button>
+        `;
+        const btn = card.querySelector('button');
+        btn.onclick = () => {
+            if (maxed) return;
+            if (playerProgress.credits < cost) {
+                sfx.playHit();
+                document.getElementById('forge-result-box').textContent = 'NOT ENOUGH REPUBLIC CREDITS!';
+                return;
+            }
+            playerProgress.credits -= cost;
+            tr[sm.key] = lvl + 1;
+            sfx.playHeal();
+            saveProgress();
+            renderShopAndDojo();
+        };
+        dojoList.appendChild(card);
+    });
+}
+
+function renderMapSelection() {
+    const grid = document.getElementById('map-grid');
+    grid.innerHTML = '';
+    MAPS.forEach(m => {
+        const card = document.createElement('div');
+        card.className = `map-card ${state.selectedMapId === m.id ? 'selected' : ''}`;
+        card.innerHTML = `
+            <canvas class="map-thumb" width="320" height="135"></canvas>
+            <div class="map-info">
+                <div class="map-name">${m.name}</div>
+                <div class="map-desc">${m.desc}</div>
+            </div>
+        `;
+        const thumbCanvas = card.querySelector('canvas');
+        drawArenaBackground(thumbCanvas.getContext('2d'), 320, 135, m, 0);
+        card.onclick = () => {
+            state.selectedMapId = m.id;
+            sfx.playIgnite();
+            renderMapSelection();
+        };
+        grid.appendChild(card);
+    });
+}
+
+// ============================================================================
+// 6. ARENA & CHARACTER RENDERING (Holo Preview + Combat)
+// ============================================================================
+function drawArenaBackground(targetCtx, w, h, map, timeSec) {
+    const grad = targetCtx.createLinearGradient(0, 0, 0, h);
+    grad.addColorStop(0, map.skyTop);
+    grad.addColorStop(1, map.skyBottom);
+    targetCtx.fillStyle = grad;
+    targetCtx.fillRect(0, 0, w, h);
+
+    targetCtx.save();
+    if (map.id === 'tatooine') {
+        targetCtx.fillStyle = '#fef08a';
+        targetCtx.beginPath();
+        targetCtx.arc(w * 0.72, h * 0.25, Math.min(w, h) * 0.07, 0, Math.PI * 2);
+        targetCtx.fill();
+        targetCtx.fillStyle = '#fb923c';
+        targetCtx.beginPath();
+        targetCtx.arc(w * 0.81, h * 0.34, Math.min(w, h) * 0.05, 0, Math.PI * 2);
+        targetCtx.fill();
+    } else if (map.id === 'death_star') {
+        targetCtx.strokeStyle = 'rgba(148, 163, 184, 0.22)';
+        targetCtx.lineWidth = 3;
+        targetCtx.beginPath();
+        targetCtx.arc(w * 0.5, h * 0.45, Math.min(w, h) * 0.32, 0, Math.PI * 2);
+        targetCtx.stroke();
+    } else if (map.id === 'naboo') {
+        targetCtx.fillStyle = 'rgba(56, 189, 248, 0.14)';
+        for (let i = 1; i <= 4; i++) {
+            targetCtx.fillRect(w * (0.18 * i), 0, 18, h);
+        }
+    } else if (map.id === 'mustafar') {
+        const pulse = 0.7 + 0.3 * Math.sin(timeSec * 3);
+        targetCtx.fillStyle = `rgba(249, 115, 22, ${0.28 * pulse})`;
+        targetCtx.fillRect(0, h * 0.78, w, h * 0.22);
+    } else if (map.id === 'mandalore') {
+        targetCtx.strokeStyle = 'rgba(45, 212, 191, 0.22)';
+        targetCtx.lineWidth = 3;
+        for (let i = 1; i <= 3; i++) {
+            targetCtx.strokeRect(w * (0.24 * i) - 18, h * 0.12, 36, h * 0.72);
+        }
+    } else if (map.id === 'bespin') {
+        const glow = targetCtx.createRadialGradient(w * 0.5, h * 0.84, 10, w * 0.5, h * 0.84, w * 0.38);
+        glow.addColorStop(0, 'rgba(251, 146, 60, 0.35)');
+        glow.addColorStop(1, 'rgba(251, 146, 60, 0)');
+        targetCtx.fillStyle = glow;
+        targetCtx.fillRect(0, h * 0.4, w, h * 0.44);
+    }
+    targetCtx.restore();
+
+    const floorY = h * 0.84;
+    targetCtx.fillStyle = map.floorColor;
+    targetCtx.fillRect(0, floorY, w, h - floorY);
+    targetCtx.fillStyle = map.floorTrim;
+    targetCtx.fillRect(0, floorY, w, 4);
+
+    for (const p of map.platforms) {
+        const px = p.x * w;
+        const py = p.y * h;
+        const pw = p.w * w;
+        targetCtx.fillStyle = map.floorColor;
+        targetCtx.fillRect(px, py, pw, p.h);
+        targetCtx.fillStyle = map.floorTrim;
+        targetCtx.fillRect(px, py, pw, 3);
+    }
+}
+
+function drawSaberBlade(targetCtx, x1, y1, x2, y2, colorObj, width = 5) {
+    targetCtx.save();
+    targetCtx.lineCap = 'round';
+    targetCtx.shadowColor = colorObj.glow;
+    targetCtx.shadowBlur = 18;
+    targetCtx.strokeStyle = colorObj.glow;
+    targetCtx.lineWidth = width + 5;
+    targetCtx.beginPath();
+    targetCtx.moveTo(x1, y1);
+    targetCtx.lineTo(x2, y2);
+    targetCtx.stroke();
+
+    targetCtx.shadowBlur = 4;
+    targetCtx.strokeStyle = colorObj.core;
+    targetCtx.lineWidth = width;
+    targetCtx.beginPath();
+    targetCtx.moveTo(x1, y1);
+    targetCtx.lineTo(x2, y2);
+    targetCtx.stroke();
+    targetCtx.restore();
+}
+
+function drawFighterModel(targetCtx, f, timeSec) {
+    const char = f.char;
+    const app = char.appearance;
+    const colorObj = SABER_COLORS.find(c => c.id === f.saberColorId) || SABER_COLORS[0];
+    const styleId = f.saberStyleId || 'single';
+    const scale = char.isYoda ? 0.72 : (char.isGrievous ? 1.12 : 1.0);
+
+    targetCtx.save();
+    targetCtx.translate(f.x, f.y);
+    if (f.victoryAnim) {
+        targetCtx.translate(0, -Math.abs(Math.sin(timeSec * 6)) * 12);
+    }
+    targetCtx.scale(f.facing * scale, scale);
+
+    // Ground shadow
+    targetCtx.fillStyle = 'rgba(0, 0, 0, 0.42)';
+    targetCtx.beginPath();
+    targetCtx.ellipse(0, 0, 24, 6, 0, 0, Math.PI * 2);
+    targetCtx.fill();
+
+    // Flowing cloak
+    const cloakSway = Math.sin(timeSec * 5 + f.x * 0.02) * 5;
+    targetCtx.fillStyle = app.cloak;
+    targetCtx.beginPath();
+    targetCtx.moveTo(-10, -76);
+    targetCtx.lineTo(-24 - cloakSway, -6);
+    targetCtx.lineTo(14, -6);
+    targetCtx.lineTo(10, -76);
+    targetCtx.closePath();
+    targetCtx.fill();
+
+    // Legs
+    const walkOffset = Math.abs(f.vx) > 20 ? Math.sin(timeSec * 14) * 7 : 0;
+    targetCtx.strokeStyle = app.robeTrim;
+    targetCtx.lineWidth = 8;
+    targetCtx.lineCap = 'round';
+    targetCtx.beginPath();
+    targetCtx.moveTo(-6, -34);
+    targetCtx.lineTo(-8 + walkOffset, -4);
+    targetCtx.moveTo(6, -34);
+    targetCtx.lineTo(8 - walkOffset, -4);
+    targetCtx.stroke();
+
+    // Torso
+    targetCtx.fillStyle = app.robeMain;
+    targetCtx.beginPath();
+    targetCtx.roundRect(-14, -76, 28, 44, 6);
+    targetCtx.fill();
+
+    // Belt
+    targetCtx.fillStyle = app.robeTrim;
+    targetCtx.fillRect(-14, -44, 28, 6);
+
+    // Head
+    targetCtx.fillStyle = app.skin;
+    targetCtx.beginPath();
+    targetCtx.arc(0, -88, 12, 0, Math.PI * 2);
+    targetCtx.fill();
+
+    if (app.mask) {
+        targetCtx.fillStyle = char.isMando ? '#94a3b8' : (char.isGrievous ? '#e2e8f0' : '#18181b');
+        targetCtx.beginPath();
+        targetCtx.arc(0, -88, 12.5, 0, Math.PI * 2);
+        targetCtx.fill();
+        if (app.visorColor) {
+            targetCtx.fillStyle = app.visorColor;
+            targetCtx.fillRect(1, -91, 10, 4);
+            if (char.isMando) targetCtx.fillRect(5, -91, 3, 11);
+        }
+    } else {
+        if (app.ears) {
+            targetCtx.fillStyle = app.skin;
+            targetCtx.beginPath();
+            targetCtx.moveTo(-10, -88);
+            targetCtx.lineTo(-25, -93);
+            targetCtx.lineTo(-10, -83);
+            targetCtx.moveTo(10, -88);
+            targetCtx.lineTo(25, -93);
+            targetCtx.lineTo(10, -83);
+            targetCtx.fill();
+        }
+        if (app.horns) {
+            targetCtx.fillStyle = '#fef08a';
+            [-6, 0, 6].forEach(hx => {
+                targetCtx.beginPath();
+                targetCtx.moveTo(hx - 2, -98);
+                targetCtx.lineTo(hx, -105);
+                targetCtx.lineTo(hx + 2, -98);
+                targetCtx.fill();
+            });
+        }
+        if (app.togruta) {
+            targetCtx.fillStyle = '#ffffff';
+            targetCtx.beginPath();
+            targetCtx.moveTo(-12, -94);
+            targetCtx.lineTo(-16, -64);
+            targetCtx.lineTo(-6, -86);
+            targetCtx.moveTo(12, -94);
+            targetCtx.lineTo(16, -64);
+            targetCtx.lineTo(6, -86);
+            targetCtx.fill();
+        }
+        targetCtx.fillStyle = char.faction === 'sith' ? '#facc15' : '#0f172a';
+        targetCtx.fillRect(4, -90, 4, 3);
+    }
+
+    // Arm & Lightsaber angle
+    let saberAngle = -0.65;
+    if (f.victoryAnim) {
+        saberAngle = -1.45;
+    } else if (f.blocking) {
+        saberAngle = -0.25;
+    } else if (f.attackTimer > 0) {
+        const progress = 1 - (f.attackTimer / f.attackDuration);
+        saberAngle = -1.35 + progress * 2.35;
+    }
+
+    const handX = 12;
+    const handY = -62;
+
+    // Front Arm
+    targetCtx.strokeStyle = app.robeMain;
+    targetCtx.lineWidth = 7;
+    targetCtx.beginPath();
+    targetCtx.moveTo(4, -70);
+    targetCtx.lineTo(handX, handY);
+    targetCtx.stroke();
+
+    // Draw Lightsaber(s) if ignited
+    if (f.ignited) {
+        targetCtx.save();
+        targetCtx.translate(handX, handY);
+        targetCtx.rotate(saberAngle);
+
+        // Hilt
+        targetCtx.fillStyle = '#94a3b8';
+        targetCtx.fillRect(-4, -3, 18, 6);
+
+        const bladeLen = styleId === 'broad_claymore' ? 88 : 76;
+        const bladeWidth = styleId === 'broad_claymore' ? 8 : 5;
+
+        // Primary forward blade
+        drawSaberBlade(targetCtx, 14, 0, 14 + bladeLen, 0, colorObj, bladeWidth);
+
+        if (styleId === 'crossguard') {
+            drawSaberBlade(targetCtx, 16, -16, 16, 16, colorObj, 4);
+        } else if (styleId === 'double_bladed' || styleId === 'switchblade') {
+            drawSaberBlade(targetCtx, -4, 0, -4 - bladeLen * 0.88, 0, colorObj, 5);
+        } else if (styleId === 'force_pike') {
+            targetCtx.strokeStyle = '#ef4444';
+            targetCtx.lineWidth = 3;
+            targetCtx.beginPath();
+            targetCtx.arc(6, 0, 14, 0, Math.PI * 2);
+            targetCtx.stroke();
+            drawSaberBlade(targetCtx, -8, 0, -8 - bladeLen * 0.85, 0, colorObj, 5);
+        } else if (styleId === 'shoto_dual' || styleId === 'grievous_four') {
+            const secCol = colorObj.secondaryGlow
+                ? { core: '#ffffff', glow: colorObj.secondaryGlow }
+                : colorObj;
+            targetCtx.save();
+            targetCtx.rotate(0.45);
+            drawSaberBlade(targetCtx, 8, 12, 8 + bladeLen * 0.82, 12, secCol, 4);
+            targetCtx.restore();
+
+            if (styleId === 'grievous_four') {
+                const spin = timeSec * 12;
+                targetCtx.save();
+                targetCtx.translate(-14, -8);
+                targetCtx.rotate(spin);
+                drawSaberBlade(targetCtx, -60, 0, 60, 0, colorObj, 4);
+                drawSaberBlade(targetCtx, 0, -60, 0, 60, secCol, 4);
+                targetCtx.restore();
+            }
+        }
+        targetCtx.restore();
+    }
+
+    if (f.hurtTimer > 0) {
+        targetCtx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+        targetCtx.beginPath();
+        targetCtx.arc(0, -52, 32, 0, Math.PI * 2);
+        targetCtx.fill();
+    }
+
+    targetCtx.restore();
+}
+
+const previewCanvas = document.getElementById('preview-canvas');
+const pCtx = previewCanvas.getContext('2d');
+function updatePreview(timeSec) {
+    if (!document.getElementById('char-screen').classList.contains('active')) return;
+    if (previewCanvas.width !== previewCanvas.clientWidth || previewCanvas.height !== previewCanvas.clientHeight) {
+        previewCanvas.width = previewCanvas.clientWidth || 340;
+        previewCanvas.height = previewCanvas.clientHeight || 215;
+    }
+    const w = previewCanvas.width;
+    const h = previewCanvas.height;
+    pCtx.clearRect(0, 0, w, h);
+
+    pCtx.strokeStyle = 'rgba(56, 189, 248, 0.45)';
+    pCtx.lineWidth = 2;
+    pCtx.beginPath();
+    pCtx.ellipse(w * 0.5, h * 0.84, 72, 16, 0, 0, Math.PI * 2);
+    pCtx.stroke();
+
+    const dummyFighter = {
+        char: findCharById(state.selectedCharId),
+        saberStyleId: state.selectedSaberStyleId,
+        saberColorId: state.selectedSaberColorId,
+        x: w * 0.5,
+        y: h * 0.83,
+        vx: 0,
+        facing: 1,
+        ignited: true,
+        blocking: false,
+        victoryAnim: false,
+        attackTimer: 0,
+        attackDuration: 0.3,
+        hurtTimer: 0
+    };
+    drawFighterModel(pCtx, dummyFighter, timeSec);
+}
+
+// ============================================================================
+// 7. COMBAT ENGINE, AI, ROCKS, PROJECTILES & MULTIPLAYER SYNC
+// ============================================================================
+const gameCanvas = document.getElementById('game-canvas');
+const ctx = gameCanvas.getContext('2d');
+const keys = {};
+const lastTapTime = {};
+
+function createFighter(charId, x, facing, isPlayer, customStyleId, customColorId) {
+    const char = findCharById(charId);
+    const tr = isPlayer ? getCharTraining(charId) : { atk: 1, spd: 1, frc: 1 };
+    const maxHp = char.maxHp + (tr.spd - 1) * 22;
+    return {
+        char,
+        isPlayer,
+        saberStyleId: customStyleId || char.defaultStyle,
+        saberColorId: customColorId || char.defaultColor,
+        x,
+        y: 0,
+        vx: 0,
+        vy: 0,
+        facing,
+        hp: maxHp,
+        maxHp,
+        force: 100,
+        maxForce: 100,
+        forceRegen: char.forceRegen + (tr.frc - 1) * 4,
+        moveSpeed: char.moveSpeed + (tr.spd - 1) * 18,
+        damageMult: char.damageMult * (1 + (tr.atk - 1) * 0.07),
+        grounded: false,
+        ignited: false,
+        blocking: false,
+        attackTimer: 0,
+        attackDuration: 0.28,
+        attackType: 'light',
+        attackHitDealt: false,
+        comboStep: 0,
+        comboResetTimer: 0,
+        dashTimer: 0,
+        hurtTimer: 0,
+        stunTimer: 0,
+        ultimateUsed: false,
+        secondWindUsed: false,
+        victoryAnim: false,
+        aiDecisionTimer: 0
+    };
+}
+
+function spawnParticles(x, y, color, count = 14, speed = 240) {
+    for (let i = 0; i < count; i++) {
+        const ang = Math.random() * Math.PI * 2;
+        const spd = (0.3 + Math.random() * 0.7) * speed;
+        state.particles.push({
+            x,
+            y,
+            vx: Math.cos(ang) * spd,
+            vy: Math.sin(ang) * spd - 40,
+            life: 0.25 + Math.random() * 0.35,
+            maxLife: 0.6,
+            color,
+            size: 2 + Math.random() * 3.5
+        });
+    }
+}
+
+function addFloatingText(x, y, text, color = '#facc15') {
+    state.floatingTexts.push({ x, y, text, color, life: 1.0 });
+}
+
+function startDuel(mpConfig = null) {
+    sfx.init();
+    if (mpConfig) mp.lastMatchPayload = mpConfig;
+    gameCanvas.width = window.innerWidth;
+    gameCanvas.height = window.innerHeight;
+    const w = gameCanvas.width;
+    const h = gameCanvas.height;
+
+    const mapId = mpConfig ? mpConfig.mapId : state.selectedMapId;
+    const map = MAPS.find(m => m.id === mapId) || MAPS[0];
+    state.selectedMapId = map.id;
+    state.floorY = h * 0.84;
+    state.platforms = map.platforms.map(p => ({
+        x: p.x * w,
+        y: p.y * h,
+        w: p.w * w,
+        h: p.h
+    }));
+
+    state.inCombat = true;
+    state.introTimer = 1.6;
+    state.victoryTimer = 0;
+    state.victoryWinner = null;
+    state.cameraZoom = 1;
+    state.roundTime = 150;
+    state.elapsedTime = 0;
+    state.clashCount = 0;
+    state.playerMaxCombo = 0;
+    state.playerLandedMelee = false;
+    state.playerUsedUltimate = false;
+    state.particles = [];
+    state.projectiles = [];
+    state.floatingTexts = [];
+
+    // Spawn interactive arena boulders
+    state.rocks = [
+        { x: w * 0.36, y: state.floorY - 22, vx: 0, vy: 0, r: 22, hp: 90, color: map.floorTrim },
+        { x: w * 0.64, y: state.floorY - 22, vx: 0, vy: 0, r: 22, hp: 90, color: map.floorTrim }
+    ];
+
+    if (mpConfig && !mp.isHost) {
+        state.player = createFighter(state.selectedCharId, w * 0.78, -1, true, state.selectedSaberStyleId, state.selectedSaberColorId);
+        state.enemy = createFighter(mpConfig.hostCharId, w * 0.22, 1, false, mpConfig.hostStyleId, mpConfig.hostColorId);
+    } else {
+        state.player = createFighter(state.selectedCharId, w * 0.22, 1, true, state.selectedSaberStyleId, state.selectedSaberColorId);
+        const oppChar = mpConfig ? mpConfig.guestCharId : state.opponentId;
+        const oppStyle = mpConfig ? mpConfig.guestStyleId : null;
+        const oppColor = mpConfig ? mpConfig.guestColorId : null;
+        state.enemy = createFighter(oppChar, w * 0.78, -1, false, oppStyle, oppColor);
+    }
+
+    state.player.y = state.floorY - 140;
+    state.enemy.y = state.floorY - 140;
+
+    showScreen('combat-screen');
+    setTimeout(() => {
+        if (state.player) state.player.ignited = true;
+        sfx.playIgnite();
+    }, 450);
+    setTimeout(() => {
+        if (state.enemy) state.enemy.ignited = true;
+        sfx.playIgnite();
+    }, 850);
+}
+
+function triggerAttack(f, type = 'light') {
+    if (state.introTimer > 0 || state.victoryWinner || f.attackTimer > 0 || f.stunTimer > 0) return;
+    f.blocking = false;
+    f.attackType = type;
+    f.attackHitDealt = false;
+    f.attackDuration = type === 'heavy' ? 0.38 : 0.24;
+    f.attackTimer = f.attackDuration;
+    if (type === 'light') {
+        f.comboStep = (f.comboStep % 3) + 1;
+        f.comboResetTimer = 1.15;
+    } else {
+        f.comboStep = 0;
+    }
+    f.vx = f.facing * (type === 'heavy' ? 230 : 140);
+    sfx.playSwing(type === 'heavy');
+}
+
+function triggerSpecial(f, fromNetwork = false) {
+    if (state.introTimer > 0 || state.victoryWinner || f.force < 30 || f.stunTimer > 0) return;
+    f.force -= 30;
+    if (f.isPlayer && mp.active && mp.channel && !fromNetwork) {
+        try { mp.channel.send({ type: 'broadcast', event: 'special_event', payload: {} }); } catch (e) {}
+    }
+    const isSith = f.char.faction === 'sith';
+    const isMando = !!f.char.isMando;
+    const isQuad = f.saberStyleId === 'grievous_four';
+
+    if (isQuad) {
+        sfx.playBuzzsaw();
+        f.vx = f.facing * 560;
+        f.dashTimer = 0.32;
+        addFloatingText(f.x, f.y - 95, 'QUAD BUZZSAW!', '#38bdf8');
+    } else if (isMando) {
+        sfx.playBlaster();
+        for (let i = 0; i < 2; i++) {
+            state.projectiles.push({
+                owner: f,
+                x: f.x + f.facing * (28 + i * 24),
+                y: f.y - 62,
+                vx: f.facing * 780,
+                vy: 0,
+                damage: 16 * f.damageMult,
+                color: '#facc15',
+                radius: 7,
+                life: 1.4,
+                kind: 'blaster'
+            });
+        }
+        addFloatingText(f.x, f.y - 95, 'IB-94 BLASTER!', '#facc15');
+    } else {
+        sfx.playForce(isSith);
+        state.projectiles.push({
+            owner: f,
+            x: f.x + f.facing * 32,
+            y: f.y - 58,
+            vx: f.facing * (isSith ? 660 : 580),
+            vy: 0,
+            damage: (isSith ? 24 : 20) * f.damageMult,
+            color: isSith ? '#ef4444' : '#38bdf8',
+            radius: 18,
+            life: 1.1,
+            kind: isSith ? 'lightning' : 'push'
+        });
+        addFloatingText(f.x, f.y - 95, isSith ? 'FORCE LIGHTNING!' : 'FORCE PUSH!', isSith ? '#ef4444' : '#38bdf8');
+    }
+}
+
+function triggerHeal(f, fromNetwork = false) {
+    if (state.introTimer > 0 || state.victoryWinner || f.force < 50 || f.hp >= f.maxHp) return;
+    f.force -= 50;
+    if (f.isPlayer && mp.active && mp.channel && !fromNetwork) {
+        try { mp.channel.send({ type: 'broadcast', event: 'heal_event', payload: {} }); } catch (e) {}
+    }
+    const healAmt = Math.round(f.maxHp * 0.22);
+    f.hp = Math.min(f.maxHp, f.hp + healAmt);
+    sfx.playHeal();
+    spawnParticles(f.x, f.y - 50, '#4ade80', 18, 180);
+    addFloatingText(f.x, f.y - 105, `+${healAmt} FORCE HEAL`, '#4ade80');
+}
+
+function triggerUltimate(f, target, fromNetwork = false) {
+    if (state.introTimer > 0 || state.victoryWinner || f.ultimateUsed || f.stunTimer > 0) return;
+    f.ultimateUsed = true;
+    if (f.isPlayer) {
+        state.playerUsedUltimate = true;
+        if (mp.active && mp.channel && !fromNetwork) {
+            try { mp.channel.send({ type: 'broadcast', event: 'ultimate_event', payload: {} }); } catch (e) {}
+        }
+    }
+
+    const drain = Math.round(target.maxHp * 0.25);
+    target.hp = Math.max(0, target.hp - drain);
+    target.hurtTimer = 0.35;
+    target.vx = f.facing * 380;
+    target.vy = -240;
+    state.screenShake = 0.45;
+
+    if (f.char.isMando) {
+        sfx.playRocket();
+        addFloatingText(f.x, f.y - 115, 'JETPACK ROCKET BARRAGE!', '#f97316');
+        spawnParticles(target.x, target.y - 50, '#f97316', 38, 360);
+    } else if (f.char.isYoda) {
+        sfx.playClash();
+        sfx.playForce(false);
+        addFloatingText(f.x, f.y - 115, 'ATARU GRAND MASTER BLITZ!', '#4ade80');
+        spawnParticles(target.x, target.y - 50, '#4ade80', 38, 360);
+    } else if (f.saberStyleId === 'grievous_four') {
+        sfx.playBuzzsaw();
+        addFloatingText(f.x, f.y - 115, 'QUAD-BLADE CYCLONE!', '#38bdf8');
+        spawnParticles(target.x, target.y - 50, '#22c55e', 38, 360);
+    } else if (f.char.faction === 'sith') {
+        sfx.playClash();
+        sfx.playForce(true);
+        addFloatingText(f.x, f.y - 115, 'DARK SIDE ANNIHILATION!', '#ef4444');
+        spawnParticles(target.x, target.y - 50, '#ef4444', 38, 360);
+    } else {
+        sfx.playClash();
+        sfx.playForce(false);
+        const colObj = SABER_COLORS.find(c => c.id === f.saberColorId) || SABER_COLORS[0];
+        addFloatingText(f.x, f.y - 115, 'LUMINOUS FORCE SURGE!', '#facc15');
+        spawnParticles(target.x, target.y - 50, colObj.glow, 38, 360);
+    }
+
+    f.x = target.x - f.facing * 64;
+    addFloatingText(target.x, target.y - 90, `-${drain} HP!`, '#ef4444');
+}
+
+function updateFighterPhysics(f, dt) {
+    if (f.attackTimer > 0) f.attackTimer = Math.max(0, f.attackTimer - dt);
+    if (f.hurtTimer > 0) f.hurtTimer = Math.max(0, f.hurtTimer - dt);
+    if (f.stunTimer > 0) f.stunTimer = Math.max(0, f.stunTimer - dt);
+    if (f.dashTimer > 0) f.dashTimer = Math.max(0, f.dashTimer - dt);
+    if (f.comboResetTimer > 0) {
+        f.comboResetTimer -= dt;
+        if (f.comboResetTimer <= 0) f.comboStep = 0;
+    }
+
+    f.force = Math.min(f.maxForce, f.force + f.forceRegen * dt);
+
+    const prevY = f.y;
+    f.vy += 1450 * dt;
+    f.x += f.vx * dt;
+    f.y += f.vy * dt;
+
+    if (f.dashTimer <= 0) {
+        f.vx *= Math.pow(0.001, dt);
+    }
+
+    const margin = 36;
+    if (f.x < margin) f.x = margin;
+    if (f.x > gameCanvas.width - margin) f.x = gameCanvas.width - margin;
+
+    f.grounded = false;
+    if (f.vy >= 0) {
+        for (const p of state.platforms) {
+            if (f.x >= p.x && f.x <= p.x + p.w && prevY <= p.y && f.y >= p.y) {
+                f.y = p.y;
+                f.vy = 0;
+                f.grounded = true;
+            }
+        }
+    }
+
+    if (f.y >= state.floorY) {
+        f.y = state.floorY;
+        f.vy = 0;
+        f.grounded = true;
+    }
+
+    if (!f.secondWindUsed && f.hp > 0 && f.hp <= f.maxHp * 0.25) {
+        f.secondWindUsed = true;
+        const boost = Math.round(f.maxHp * 0.14);
+        f.hp = Math.min(f.maxHp, f.hp + boost);
+        f.force = f.maxForce;
+        sfx.playHeal();
+        spawnParticles(f.x, f.y - 50, '#38bdf8', 22, 220);
+        addFloatingText(f.x, f.y - 115, `SECOND WIND! +${boost} HP`, '#38bdf8');
+    }
+}
+
+function resolveMeleeHit(attacker, defender) {
+    if (attacker.attackTimer <= 0 || attacker.attackHitDealt) return;
+    const progress = 1 - (attacker.attackTimer / attacker.attackDuration);
+    if (progress < 0.25 || progress > 0.75) return;
+
+    const reach = attacker.saberStyleId === 'broad_claymore' ? 112 : 96;
+    const dx = defender.x - attacker.x;
+    const dy = Math.abs(defender.y - attacker.y);
+    if (Math.sign(dx) !== attacker.facing || Math.abs(dx) > reach || dy > 78) return;
+
+    attacker.attackHitDealt = true;
+
+    if (defender.attackTimer > 0 && !defender.attackHitDealt) {
+        defender.attackHitDealt = true;
+        state.clashCount++;
+        state.screenShake = 0.25;
+        attacker.vx = -attacker.facing * 260;
+        defender.vx = -defender.facing * 260;
+        sfx.playClash();
+        spawnParticles((attacker.x + defender.x) * 0.5, attacker.y - 55, '#facc15', 22, 280);
+        addFloatingText((attacker.x + defender.x) * 0.5, attacker.y - 95, 'SABER CLASH!', '#facc15');
+        return;
+    }
+
+    if (defender.blocking && Math.sign(attacker.x - defender.x) === defender.facing && attacker.attackType !== 'heavy') {
+        sfx.playClash();
+        defender.vx = attacker.facing * 140;
+        spawnParticles(defender.x, defender.y - 55, '#38bdf8', 12, 180);
+        addFloatingText(defender.x, defender.y - 90, 'DEFLECTED!', '#38bdf8');
+        return;
+    }
+
+    const baseDmg = attacker.attackType === 'heavy' ? 24 : (13 + attacker.comboStep * 2);
+    const dmg = Math.round(baseDmg * attacker.damageMult);
+    defender.hp = Math.max(0, defender.hp - dmg);
+    defender.hurtTimer = 0.22;
+    defender.vx = attacker.facing * (attacker.attackType === 'heavy' ? 320 : 180);
+    if (attacker.attackType === 'heavy') defender.vy = -190;
+
+    if (attacker.isPlayer) {
+        state.playerLandedMelee = true;
+        const comboNow = Math.max(1, attacker.comboStep);
+        if (comboNow > state.playerMaxCombo) state.playerMaxCombo = comboNow;
+    }
+
+    sfx.playHit();
+    const colObj = SABER_COLORS.find(c => c.id === attacker.saberColorId) || SABER_COLORS[0];
+    spawnParticles(defender.x, defender.y - 52, colObj.glow, 16, 220);
+    addFloatingText(defender.x, defender.y - 88, `-${dmg}`, '#ef4444');
+}
+
+function updateRocksAndInteractions(dt) {
+    for (let i = state.rocks.length - 1; i >= 0; i--) {
+        const r = state.rocks[i];
+        r.vy += 1200 * dt;
+        r.x += r.vx * dt;
+        r.y += r.vy * dt;
+        r.vx *= Math.pow(0.05, dt);
+
+        if (r.y >= state.floorY - r.r) {
+            r.y = state.floorY - r.r;
+            r.vy = 0;
+        }
+        if (r.x < r.r) { r.x = r.r; r.vx = Math.abs(r.vx) * 0.6; }
+        if (r.x > gameCanvas.width - r.r) { r.x = gameCanvas.width - r.r; r.vx = -Math.abs(r.vx) * 0.6; }
+
+        [state.player, state.enemy].forEach(f => {
+            if (!f) return;
+            const dx = r.x - f.x;
+            const dy = Math.abs((r.y + r.r) - f.y);
+            if (Math.abs(dx) < r.r + 18 && dy < 42) {
+                r.vx += Math.sign(dx || f.facing) * 260 * dt * 10;
+            }
+            if (f.attackTimer > 0 && Math.abs(dx) < 95 && Math.sign(dx) === f.facing && dy < 65) {
+                r.vx = f.facing * 520;
+                r.vy = -160;
+                r.hp -= 25;
+                sfx.playRockHit(r.hp <= 0);
+            }
+        });
+
+        if (Math.abs(r.vx) > 260) {
+            [state.player, state.enemy].forEach(f => {
+                if (!f || f.hurtTimer > 0) return;
+                if (Math.abs(r.x - f.x) < r.r + 18 && Math.abs(r.y - (f.y - 45)) < 48) {
+                    f.hp = Math.max(0, f.hp - 14);
+                    f.hurtTimer = 0.25;
+                    r.vx *= -0.4;
+                    sfx.playRockHit(false);
+                    addFloatingText(f.x, f.y - 85, '-14 BOULDER!', '#fb923c');
+                }
+            });
+        }
+
+        if (r.hp <= 0) {
+            spawnParticles(r.x, r.y, r.color, 18, 220);
+            state.rocks.splice(i, 1);
+        }
+    }
+}
+
+function updateAI(dt) {
+    const ai = state.enemy;
+    const target = state.player;
+    if (!ai || !target || mp.active) return;
+
+    const skillMult = state.difficulty === 'master' ? 1.35 : (state.difficulty === 'padawan' ? 0.65 : 1.0);
+    const dx = target.x - ai.x;
+    const dist = Math.abs(dx);
+    ai.facing = dx >= 0 ? 1 : -1;
+
+    ai.aiDecisionTimer -= dt;
+    if (ai.aiDecisionTimer > 0) return;
+    ai.aiDecisionTimer = (0.22 / skillMult) + Math.random() * 0.14;
+
+    ai.blocking = false;
+
+    if (ai.hp <= ai.maxHp * 0.35 && !ai.ultimateUsed && Math.random() < 0.45 * skillMult) {
+        triggerUltimate(ai, target);
+        return;
+    }
+
+    if (ai.hp <= ai.maxHp * 0.5 && ai.force >= 55 && Math.random() < 0.35 * skillMult) {
+        triggerHeal(ai);
+        return;
+    }
+
+    if (target.attackTimer > 0 && dist < 110 && Math.random() < 0.45 * skillMult) {
+        ai.blocking = true;
+        return;
+    }
+
+    if (dist > 240 && ai.force >= 35 && Math.random() < 0.32 * skillMult) {
+        triggerSpecial(ai);
+        return;
+    }
+
+    if (dist > 82) {
+        ai.vx = ai.facing * ai.moveSpeed * (0.85 + 0.15 * skillMult);
+        if (target.y < ai.y - 70 && ai.grounded && Math.random() < 0.4) {
+            ai.vy = -610;
+        }
+    } else {
+        if (Math.random() < 0.65) {
+            triggerAttack(ai, Math.random() < 0.28 ? 'heavy' : 'light');
+        } else {
+            ai.vx = -ai.facing * ai.moveSpeed * 0.6;
+        }
+    }
+}
+
+function updateCombat(dt) {
+    if (!state.inCombat) return;
+
+    if (state.screenShake > 0) state.screenShake = Math.max(0, state.screenShake - dt);
+
+    if (state.introTimer > 0) {
+        state.introTimer -= dt;
+        updateFighterPhysics(state.player, dt);
+        updateFighterPhysics(state.enemy, dt);
+        return;
+    }
+
+    if (state.victoryWinner) {
+        state.victoryTimer -= dt;
+        state.cameraZoom = Math.min(1.28, state.cameraZoom + dt * 0.25);
+        state.cameraFocusX = state.victoryWinner.x;
+        state.cameraFocusY = state.victoryWinner.y - 50;
+        if (Math.random() < 0.35) {
+            spawnParticles(state.victoryWinner.x, state.victoryWinner.y - 70, '#facc15', 3, 140);
+        }
+        updateParticlesAndText(dt);
+        if (state.victoryTimer <= 0) {
+            endDuel(state.victoryWinner);
+        }
+        return;
+    }
+
+    state.elapsedTime += dt;
+    state.roundTime = Math.max(0, state.roundTime - dt);
+
+    const p = state.player;
+    if (p && p.stunTimer <= 0) {
+        let moveDir = 0;
+        if (keys['KeyA'] || keys['ArrowLeft']) moveDir -= 1;
+        if (keys['KeyD'] || keys['ArrowRight']) moveDir += 1;
+        if (moveDir !== 0 && p.dashTimer <= 0) {
+            p.vx = moveDir * p.moveSpeed;
+            p.facing = moveDir;
+        }
+        p.blocking = !!(keys['KeyS'] || keys['ArrowDown'] || keys['ShiftLeft'] || keys['ShiftRight']);
+    }
+
+    updateFighterPhysics(state.player, dt);
+    if (mp.active) {
+        updateRemotePlayer(dt);
+        broadcastMultiplayerState();
+    } else {
+        updateAI(dt);
+        updateFighterPhysics(state.enemy, dt);
+    }
+
+    resolveMeleeHit(state.player, state.enemy);
+    resolveMeleeHit(state.enemy, state.player);
+    updateRocksAndInteractions(dt);
+
+    for (let i = state.projectiles.length - 1; i >= 0; i--) {
+        const proj = state.projectiles[i];
+        proj.x += proj.vx * dt;
+        proj.y += proj.vy * dt;
+        proj.life -= dt;
+
+        for (const r of state.rocks) {
+            if (Math.abs(proj.x - r.x) < r.r + proj.radius && Math.abs(proj.y - r.y) < r.r + proj.radius) {
+                r.vx = Math.sign(proj.vx) * 650;
+                r.vy = -180;
+                proj.life = 0;
+            }
+        }
+
+        const target = proj.owner === state.player ? state.enemy : state.player;
+        if (target && Math.abs(proj.x - target.x) < 28 + proj.radius && Math.abs(proj.y - (target.y - 52)) < 52) {
+            if (target.blocking && Math.sign(proj.owner.x - target.x) === target.facing) {
+                proj.vx = -proj.vx;
+                proj.owner = target;
+                sfx.playClash();
+                addFloatingText(target.x, target.y - 90, 'DEFLECTED!', '#38bdf8');
+            } else {
+                const dmg = Math.round(proj.damage);
+                target.hp = Math.max(0, target.hp - dmg);
+                target.hurtTimer = 0.22;
+                target.vx = Math.sign(proj.vx) * 280;
+                proj.life = 0;
+                sfx.playHit();
+                spawnParticles(target.x, target.y - 52, proj.color, 16, 220);
+                addFloatingText(target.x, target.y - 88, `-${dmg}`, proj.color);
+            }
+        }
+
+        if (proj.life <= 0) state.projectiles.splice(i, 1);
+    }
+
+    updateParticlesAndText(dt);
+
+    if (state.player.hp <= 0 || state.enemy.hp <= 0 || state.roundTime <= 0) {
+        const winner = state.player.hp >= state.enemy.hp ? state.player : state.enemy;
+        const loser = winner === state.player ? state.enemy : state.player;
+        winner.victoryAnim = true;
+        loser.ignited = false;
+        state.victoryWinner = winner;
+        state.victoryTimer = 2.4;
+        sfx.playVictory();
+    }
+}
+
+function updateParticlesAndText(dt) {
+    for (let i = state.particles.length - 1; i >= 0; i--) {
+        const pt = state.particles[i];
+        pt.x += pt.vx * dt;
+        pt.y += pt.vy * dt;
+        pt.vy += 400 * dt;
+        pt.life -= dt;
+        if (pt.life <= 0) state.particles.splice(i, 1);
+    }
+    for (let i = state.floatingTexts.length - 1; i >= 0; i--) {
+        const ft = state.floatingTexts[i];
+        ft.y -= 42 * dt;
+        ft.life -= dt;
+        if (ft.life <= 0) state.floatingTexts.splice(i, 1);
+    }
+}
+
+function drawFighterHUD(f, x, y, width, alignRight) {
+    ctx.save();
+    ctx.font = '900 15px Orbitron, sans-serif';
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = alignRight ? 'right' : 'left';
+    ctx.fillText(f.char.name, alignRight ? x + width : x, y - 8);
+
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+    ctx.fillRect(x, y, width, 16);
+    const hpRatio = Math.max(0, f.hp / f.maxHp);
+    const hpFillW = width * hpRatio;
+    ctx.fillStyle = f.char.faction === 'jedi' ? '#38bdf8' : '#ef4444';
+    ctx.fillRect(alignRight ? x + (width - hpFillW) : x, y, hpFillW, 16);
+    ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(x, y, width, 16);
+
+    ctx.font = '700 11px Orbitron, sans-serif';
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.fillText(`${Math.ceil(f.hp)} / ${f.maxHp}`, x + width * 0.5, y + 12);
+
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+    ctx.fillRect(x, y + 20, width * 0.72, 8);
+    const frcFillW = (width * 0.72) * (f.force / f.maxForce);
+    ctx.fillStyle = '#facc15';
+    ctx.fillRect(alignRight ? x + width - frcFillW : x, y + 20, frcFillW, 8);
+
+    ctx.font = '700 11px Orbitron, sans-serif';
+    ctx.textAlign = alignRight ? 'right' : 'left';
+    ctx.fillStyle = f.ultimateUsed ? '#64748b' : '#facc15';
+    ctx.fillText(f.ultimateUsed ? 'ULTIMATE SPENT' : '★ ALL-OUT READY [U/R]', alignRight ? x + width : x, y + 43);
+    ctx.restore();
+}
+
+function renderCombatHUD() {
+    const w = gameCanvas.width;
+    const barW = Math.min(340, w * 0.34);
+    drawFighterHUD(state.player, 24, 34, barW, false);
+    drawFighterHUD(state.enemy, w - 24 - barW, 34, barW, true);
+
+    ctx.save();
+    ctx.font = '900 24px Orbitron, sans-serif';
+    ctx.fillStyle = state.roundTime <= 15 ? '#ef4444' : '#facc15';
+    ctx.textAlign = 'center';
+    ctx.fillText(Math.ceil(state.roundTime), w * 0.5, 62);
+
+    if (mp.active && mp.roomCode) {
+        ctx.font = '700 11px Orbitron, sans-serif';
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillText(`ONLINE ROOM: ${mp.roomCode}`, w * 0.5, 80);
+    }
+
+    if (state.introTimer > 0) {
+        ctx.font = '900 38px Orbitron, sans-serif';
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillText(state.introTimer > 0.6 ? 'PREPARE FOR DUEL...' : 'ENGAGE!', w * 0.5, gameCanvas.height * 0.36);
+    } else if (state.victoryWinner) {
+        ctx.font = '900 38px Orbitron, sans-serif';
+        ctx.fillStyle = '#facc15';
+        ctx.fillText(`${state.victoryWinner.char.name} VICTORIOUS!`, w * 0.5, gameCanvas.height * 0.32);
+    }
+    ctx.restore();
+}
+
+function renderCombat(timeSec) {
+    if (!state.inCombat) return;
+    const w = gameCanvas.width;
+    const h = gameCanvas.height;
+    const map = MAPS.find(m => m.id === state.selectedMapId) || MAPS[0];
+
+    ctx.save();
+    if (state.screenShake > 0) {
+        ctx.translate((Math.random() - 0.5) * 14, (Math.random() - 0.5) * 14);
+    }
+    if (state.cameraZoom > 1) {
+        ctx.translate(w * 0.5, h * 0.5);
+        ctx.scale(state.cameraZoom, state.cameraZoom);
+        ctx.translate(-state.cameraFocusX, -state.cameraFocusY);
+    }
+
+    drawArenaBackground(ctx, w, h, map, timeSec);
+
+    for (const r of state.rocks) {
+        ctx.save();
+        ctx.fillStyle = '#475569';
+        ctx.strokeStyle = r.color;
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(r.x, r.y, r.r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+    }
+
+    if (state.player) drawFighterModel(ctx, state.player, timeSec);
+    if (state.enemy) drawFighterModel(ctx, state.enemy, timeSec);
+
+    for (const proj of state.projectiles) {
+        ctx.save();
+        ctx.fillStyle = proj.color;
+        ctx.shadowColor = proj.color;
+        ctx.shadowBlur = 16;
+        ctx.beginPath();
+        if (proj.kind === 'blaster') {
+            ctx.fillRect(proj.x - 16, proj.y - 3, 32, 6);
+        } else {
+            ctx.arc(proj.x, proj.y, proj.radius, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.restore();
+    }
+
+    for (const pt of state.particles) {
+        ctx.fillStyle = pt.color;
+        ctx.globalAlpha = Math.max(0, pt.life / pt.maxLife);
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, pt.size, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    for (const ft of state.floatingTexts) {
+        ctx.font = '900 16px Orbitron, sans-serif';
+        ctx.fillStyle = ft.color;
+        ctx.textAlign = 'center';
+        ctx.fillText(ft.text, ft.x, ft.y);
+    }
+
+    ctx.restore();
+    renderCombatHUD();
+}
+
+function endDuel(winner) {
+    state.inCombat = false;
+    const playerWon = winner === state.player;
+    const diffMult = state.difficulty === 'master' ? 1.5 : (state.difficulty === 'padawan' ? 0.8 : 1.0);
+    const creditsEarned = Math.round((playerWon ? 120 : 40) * diffMult + state.playerMaxCombo * 10);
+    const unlockMessages = [];
+
+    if (playerWon) {
+        playerProgress.wins += 1;
+        if (!playerProgress.defeatedIds.includes(state.enemy.char.id)) {
+            playerProgress.defeatedIds.push(state.enemy.char.id);
+        }
+
+        const grantAch = (id, label) => {
+            if (!playerProgress.achievements.includes(id)) {
+                playerProgress.achievements.push(id);
+                unlockMessages.push(`ACHIEVEMENT: ${label}`);
+            }
+        };
+        if (!state.playerLandedMelee) grantAch('force_only', 'WAY OF THE FORCE');
+        if (state.player.hp >= state.player.maxHp * 0.85) grantAch('flawless_defense', 'UNTOUCHABLE MASTER');
+        if (state.playerMaxCombo >= 6) grantAch('combo_master', 'BLADE DANCER');
+        if (state.elapsedTime <= 30) grantAch('speedrunner', 'LIGHTSPEED DUELIST');
+        if (!state.playerUsedUltimate) grantAch('no_ult_win', 'PURE TECHNIQUE');
+
+        getAllCharacters().forEach(c => {
+            if (isCharacterUnlocked(c) && c.unlockCondition.type !== 'starter') {
+                if (c.unlockCondition.type === 'wins' && playerProgress.wins === c.unlockCondition.count) {
+                    unlockMessages.push(`NEW WARRIOR: ${c.name}`);
+                    if (c.unlockCondition.bonusStyle && !playerProgress.unlockedSabers.includes(c.unlockCondition.bonusStyle)) {
+                        playerProgress.unlockedSabers.push(c.unlockCondition.bonusStyle);
+                    }
+                }
+                if (c.unlockCondition.type === 'defeat' && c.unlockCondition.targetId === state.enemy.char.id) {
+                    unlockMessages.push(`NEW WARRIOR: ${c.name}`);
+                    if (c.unlockCondition.bonusStyle && !playerProgress.unlockedSabers.includes(c.unlockCondition.bonusStyle)) {
+                        playerProgress.unlockedSabers.push(c.unlockCondition.bonusStyle);
+                    }
+                }
+            }
+        });
+    }
+
+    playerProgress.credits += creditsEarned;
+    saveProgress();
+
+    document.getElementById('end-title').textContent = playerWon ? 'VICTORY' : 'DEFEATED';
+    document.getElementById('end-subtitle').textContent = playerWon ? 'THE FORCE IS STRONG WITH YOU' : 'STRUCK DOWN IN COMBAT';
+    document.getElementById('stat-winner').textContent = winner.char.name;
+    document.getElementById('stat-credits').textContent = `+${creditsEarned} ◈`;
+    document.getElementById('stat-time').textContent = `${Math.round(state.elapsedTime)}s`;
+    document.getElementById('stat-combo').textContent = `${state.playerMaxCombo} Hits`;
+    document.getElementById('stat-clashes').textContent = state.clashCount;
+
+    const banner = document.getElementById('unlock-banner');
+    if (unlockMessages.length > 0) {
+        banner.style.display = 'block';
+        banner.textContent = '★ ' + unlockMessages.join(' • ') + ' ★';
+    } else {
+        banner.style.display = 'none';
+    }
+
+    showScreen('end-screen');
+}
+
+// ============================================================================
+// 8. SUPABASE REALTIME MULTIPLAYER ROOM SYNC
+// ============================================================================
+function connectSupabaseClient(url, key, onReadyCallback = null) {
+    const cleanUrl = (url || '').trim().replace(/\/rest\/v1\/?$/i, '').replace(/\/+$/, '');
+    const cleanKey = (key || '').trim();
+
+    if (!cleanUrl || !cleanKey || !window.supabase) return false;
+
+    try {
+        mp.client = window.supabase.createClient(cleanUrl, cleanKey);
+        mp.connected = true;
+        if (onReadyCallback) onReadyCallback();
+        return true;
+    } catch (err) {
+        return false;
+    }
+}
+
+function joinRealtimeRoom(roomCode, isHost) {
+    if (!mp.client) {
+        connectSupabaseClient(DEFAULT_SUPABASE_URL, DEFAULT_SUPABASE_ANON_KEY);
+    }
+    if (!mp.client) return;
+
+    if (mp.channel) {
+        try { mp.client.removeChannel(mp.channel); } catch (e) {}
+    }
+
+    mp.roomCode = roomCode.toUpperCase();
+    mp.isHost = isHost;
+    mp.active = true;
+
+    const lobbyBox = document.getElementById('mp-lobby-box');
+    const copyBtn = document.getElementById('btn-copy-room');
+    const inviteBtn = document.getElementById('btn-copy-invite');
+
+    lobbyBox.innerHTML = isHost
+        ? `ROOM <strong style="color:#facc15;font-size:1.15rem;letter-spacing:0.16em;">${mp.roomCode}</strong> CREATED! SHARE THIS CODE WITH YOUR OPPONENT...`
+        : `CONNECTING TO ROOM <strong style="color:#38bdf8;font-size:1.15rem;">${mp.roomCode}</strong>...`;
+
+    if (copyBtn) copyBtn.style.display = isHost ? 'block' : 'none';
+    if (inviteBtn) inviteBtn.style.display = isHost ? 'block' : 'none';
+
+    try {
+        mp.channel = mp.client.channel(`galactic_duel_${mp.roomCode}`, {
+            config: { broadcast: { self: false } }
+        });
+
+        mp.channel
+            .on('broadcast', { event: 'join_request' }, ({ payload }) => {
+                if (mp.isHost) {
+                    const startPayload = {
+                        mapId: state.selectedMapId,
+                        hostCharId: state.selectedCharId,
+                        hostStyleId: state.selectedSaberStyleId,
+                        hostColorId: state.selectedSaberColorId,
+                        guestCharId: payload.charId,
+                        guestStyleId: payload.styleId,
+                        guestColorId: payload.colorId
+                    };
+                    mp.channel.send({ type: 'broadcast', event: 'match_start', payload: startPayload });
+                    startDuel(startPayload);
+                }
+            })
+            .on('broadcast', { event: 'match_start' }, ({ payload }) => {
+                if (!mp.isHost) {
+                    startDuel(payload);
+                }
+            })
+            .on('broadcast', { event: 'special_event' }, () => {
+                if (state.inCombat && state.enemy) triggerSpecial(state.enemy, true);
+            })
+            .on('broadcast', { event: 'heal_event' }, () => {
+                if (state.inCombat && state.enemy) triggerHeal(state.enemy, true);
+            })
+            .on('broadcast', { event: 'ultimate_event' }, () => {
+                if (state.inCombat && state.enemy && state.player) triggerUltimate(state.enemy, state.player, true);
+            })
+            .on('broadcast', { event: 'fighter_sync' }, ({ payload }) => {
+                if (!state.inCombat || !state.enemy) return;
+                const w = gameCanvas.width || 1000;
+                const h = gameCanvas.height || 600;
+                state.enemy.x = payload.nx * w;
+                state.enemy.y = payload.ny * h;
+                state.enemy.vx = payload.vx;
+                state.enemy.vy = payload.vy;
+                state.enemy.facing = payload.facing;
+                state.enemy.blocking = payload.blocking;
+                state.enemy.ignited = payload.ignited;
+                if (payload.attacking && state.enemy.attackTimer <= 0) {
+                    triggerAttack(state.enemy, payload.attackType || 'light');
+                }
+                if (typeof payload.enemyHp === 'number' && state.player) {
+                    state.player.hp = Math.min(state.player.hp, payload.enemyHp);
+                }
+            })
+            .subscribe((status) => {
+                if (status === 'SUBSCRIBED') {
+                    if (!isHost) {
+                        mp.channel.send({
+                            type: 'broadcast',
+                            event: 'join_request',
+                            payload: {
+                                charId: state.selectedCharId,
+                                styleId: state.selectedSaberStyleId,
+                                colorId: state.selectedSaberColorId
+                            }
+                        });
+                        lobbyBox.innerHTML = `CONNECTED TO <strong style="color:#4ade80;">${mp.roomCode}</strong>! STARTING DUEL...`;
+                    }
+                } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+                    lobbyBox.innerHTML = `<span style="color:#facc15;">ONLINE WEBSOCKET BLOCKED IN PREVIEW SANDBOX — HOST THIS HTML ON GITHUB PAGES FOR LIVE MULTIPLAYER!</span>`;
+                }
+            });
+    } catch (err) {
+        lobbyBox.innerHTML = `<span style="color:#facc15;">ONLINE WEBSOCKET UNAVAILABLE IN SANDBOX PREVIEW — WORKS AUTOMATICALLY ON GITHUB PAGES!</span>`;
+    }
+}
+
+function broadcastMultiplayerState() {
+    if (!mp.active || !mp.channel || !state.player || !state.enemy) return;
+    const now = performance.now();
+    if (now - mp.lastSendTime < 45) return;
+    mp.lastSendTime = now;
+
+    const w = gameCanvas.width || 1000;
+    const h = gameCanvas.height || 600;
+    try {
+        mp.channel.send({
+            type: 'broadcast',
+            event: 'fighter_sync',
+            payload: {
+                nx: state.player.x / w,
+                ny: state.player.y / h,
+                vx: state.player.vx,
+                vy: state.player.vy,
+                facing: state.player.facing,
+                blocking: state.player.blocking,
+                ignited: state.player.ignited,
+                attacking: state.player.attackTimer > 0,
+                attackType: state.player.attackType,
+                enemyHp: state.enemy.hp
+            }
+        });
+    } catch (e) {}
+}
+
+function updateRemotePlayer(dt) {
+    if (!state.enemy) return;
+    updateFighterPhysics(state.enemy, dt);
+}
+
+// ============================================================================
+// 9. EVENT LISTENERS & MAIN ANIMATION LOOP
+// ============================================================================
+document.getElementById('btn-start-game').onclick = () => showScreen('char-screen');
+document.getElementById('btn-open-mp').onclick = () => showScreen('mp-screen');
+
+document.getElementById('tab-jedi').onclick = () => {
+    state.activeFactionTab = 'jedi';
+    document.getElementById('tab-jedi').classList.add('active');
+    document.getElementById('tab-sith').classList.remove('active');
+    const firstJedi = CHARACTERS.jedi.find(c => isCharacterUnlocked(c)) || CHARACTERS.jedi[0];
+    state.selectedCharId = firstJedi.id;
+    renderSetupUI();
+};
+
+document.getElementById('tab-sith').onclick = () => {
+    state.activeFactionTab = 'sith';
+    document.getElementById('tab-sith').classList.add('active');
+    document.getElementById('tab-jedi').classList.remove('active');
+    const firstSith = CHARACTERS.sith.find(c => isCharacterUnlocked(c)) || CHARACTERS.sith[0];
+    state.selectedCharId = firstSith.id;
+    renderSetupUI();
+};
+
+document.getElementById('opponent-select').onchange = (e) => {
+    state.opponentId = e.target.value;
+};
+
+document.getElementById('difficulty-select').onchange = (e) => {
+    state.difficulty = e.target.value;
+};
+
+document.getElementById('btn-open-shop').onclick = () => showScreen('shop-screen');
+document.getElementById('btn-close-shop').onclick = () => showScreen('char-screen');
+
+document.getElementById('btn-buy-saber').onclick = () => {
+    const locked = SABER_STYLES.filter(s => !isSaberStyleUnlocked(s));
+    const resBox = document.getElementById('forge-result-box');
+    if (locked.length === 0) {
+        resBox.textContent = 'ALL LIGHTSABER HILTS ALREADY UNLOCKED!';
+        return;
+    }
+    if (playerProgress.credits < 300) {
+        sfx.playHit();
+        resBox.textContent = 'NOT ENOUGH CREDITS (300 ◈ REQUIRED)!';
+        return;
+    }
+    playerProgress.credits -= 300;
+    const pick = locked[Math.floor(Math.random() * locked.length)];
+    playerProgress.unlockedSabers.push(pick.id);
+    state.selectedSaberStyleId = pick.id;
+    sfx.playIgnite();
+    saveProgress();
+    resBox.textContent = `★ FORGED NEW HILT: ${pick.name}! ★`;
+    renderShopAndDojo();
+    renderSetupUI();
+};
+
+document.getElementById('btn-buy-color').onclick = () => {
+    const locked = SABER_COLORS.filter(c => !isColorUnlocked(c));
+    const resBox = document.getElementById('forge-result-box');
+    if (locked.length === 0) {
+        resBox.textContent = 'ALL KYBER CRYSTAL COLORS ALREADY UNLOCKED!';
+        return;
+    }
+    if (playerProgress.credits < 200) {
+        sfx.playHit();
+        resBox.textContent = 'NOT ENOUGH CREDITS (200 ◈ REQUIRED)!';
+        return;
+    }
+    playerProgress.credits -= 200;
+    const pick = locked[Math.floor(Math.random() * locked.length)];
+    playerProgress.unlockedColors.push(pick.id);
+    state.selectedSaberColorId = pick.id;
+    sfx.playIgnite();
+    saveProgress();
+    resBox.textContent = `★ ATTUNED KYBER CRYSTAL: ${pick.name.toUpperCase()}! ★`;
+    renderShopAndDojo();
+    renderSetupUI();
+};
+
+document.getElementById('btn-back-title').onclick = () => showScreen('title-screen');
+document.getElementById('btn-to-maps').onclick = () => showScreen('map-screen');
+document.getElementById('btn-back-char').onclick = () => showScreen('char-screen');
+document.getElementById('btn-launch-duel').onclick = () => {
+    mp.active = false;
+    startDuel();
+};
+
+document.getElementById('btn-host-room').onclick = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let code = '';
+    for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+    joinRealtimeRoom(code, true);
+};
+
+document.getElementById('btn-join-room').onclick = () => {
+    const code = document.getElementById('mp-room-input').value.trim().toUpperCase();
+    if (code.length < 4) return;
+    joinRealtimeRoom(code, false);
+};
+
+document.getElementById('btn-copy-room').onclick = () => {
+    if (!mp.roomCode) return;
+    const tmp = document.createElement('textarea');
+    tmp.value = mp.roomCode;
+    document.body.appendChild(tmp);
+    tmp.select();
+    document.execCommand('copy');
+    document.body.removeChild(tmp);
+    document.getElementById('btn-copy-room').textContent = '✔ COPIED: ' + mp.roomCode;
+    setTimeout(() => {
+        document.getElementById('btn-copy-room').textContent = '📋 COPY ROOM CODE';
+    }, 2000);
+};
+
+document.getElementById('btn-copy-invite').onclick = () => {
+    if (!mp.roomCode) return;
+    const inviteUrl = `${window.location.origin}${window.location.pathname}?room=${mp.roomCode}`;
+    const tmp = document.createElement('textarea');
+    tmp.value = inviteUrl;
+    document.body.appendChild(tmp);
+    tmp.select();
+    document.execCommand('copy');
+    document.body.removeChild(tmp);
+    document.getElementById('btn-copy-invite').textContent = '✔ INVITE LINK COPIED!';
+    setTimeout(() => {
+        document.getElementById('btn-copy-invite').textContent = '🔗 COPY DIRECT INVITE LINK';
+    }, 2000);
+};
+
+document.getElementById('btn-mp-customize').onclick = () => showScreen('char-screen');
+document.getElementById('btn-mp-back').onclick = () => {
+    mp.active = false;
+    showScreen('title-screen');
+};
+
+document.getElementById('btn-toggle-sound').onclick = () => {
+    const muted = sfx.toggleMute();
+    document.getElementById('btn-toggle-sound').textContent = muted ? '🔇 SFX: OFF' : '🔊 SFX: ON';
+};
+
+document.getElementById('btn-quit-match').onclick = () => {
+    state.inCombat = false;
+    showScreen('title-screen');
+};
+
+document.getElementById('btn-rematch').onclick = () => {
+    startDuel(mp.active ? mp.lastMatchPayload : null);
+};
+
+document.getElementById('btn-change-setup').onclick = () => showScreen('char-screen');
+
+// Holocron Save Vault Modal Listeners
+document.getElementById('btn-open-save-modal').onclick = () => {
+    resetConfirmArmed = false;
+    document.getElementById('btn-reset-save').textContent = '🗑 RESET SAVE';
+    document.getElementById('save-modal-feedback').textContent = '';
+    updateSaveIndicators();
+    document.getElementById('save-modal').style.display = 'flex';
+};
+
+document.getElementById('btn-close-save-modal').onclick = () => {
+    document.getElementById('save-modal').style.display = 'none';
+};
+
+document.getElementById('btn-export-save').onclick = () => {
+    const code = encodeHolocronCode();
+    const box = document.getElementById('holocron-code-box');
+    box.value = code;
+    box.select();
+    document.execCommand('copy');
+    document.getElementById('save-modal-feedback').style.color = '#4ade80';
+    document.getElementById('save-modal-feedback').textContent = '✔ HOLOCRON SAVE CODE COPIED TO CLIPBOARD!';
+};
+
+document.getElementById('btn-import-save').onclick = () => {
+    const box = document.getElementById('holocron-code-box');
+    const fb = document.getElementById('save-modal-feedback');
+    try {
+        playerProgress = decodeHolocronCode(box.value);
+        saveProgress();
+        renderSetupUI();
+        sfx.playHeal();
+        fb.style.color = '#4ade80';
+        fb.textContent = '✔ PROGRESS RESTORED FROM HOLOCRON CODE!';
+    } catch (err) {
+        sfx.playHit();
+        fb.style.color = '#ef4444';
+        fb.textContent = '✖ INVALID HOLOCRON SAVE CODE';
+    }
+};
+
+document.getElementById('btn-reset-save').onclick = () => {
+    const btn = document.getElementById('btn-reset-save');
+    const fb = document.getElementById('save-modal-feedback');
+    if (!resetConfirmArmed) {
+        resetConfirmArmed = true;
+        btn.textContent = '⚠ CLICK AGAIN TO CONFIRM';
+        fb.style.color = '#facc15';
+        fb.textContent = 'WARNING: THIS WILL ERASE ALL UNLOCKS & CREDITS!';
+        return;
+    }
+    resetConfirmArmed = false;
+    btn.textContent = '🗑 RESET SAVE';
+    playerProgress = JSON.parse(JSON.stringify(defaultProgress));
+    saveProgress();
+    renderSetupUI();
+    fb.style.color = '#38bdf8';
+    fb.textContent = 'SAVE DATA RESET TO DEFAULT.';
+};
+
+// Keyboard & Touch Input Handling
+function handleActionKey(code) {
+    if (!state.inCombat || !state.player) return;
+    const p = state.player;
+    if ((code === 'KeyW' || code === 'ArrowUp' || code === 'Space') && p.grounded) {
+        p.vy = -630;
+        p.grounded = false;
+    } else if (code === 'KeyJ' || code === 'KeyZ') {
+        triggerAttack(p, 'light');
+    } else if (code === 'KeyK' || code === 'KeyX') {
+        triggerAttack(p, 'heavy');
+    } else if (code === 'KeyL' || code === 'KeyC') {
+        triggerSpecial(p);
+    } else if (code === 'KeyH' || code === 'KeyV') {
+        triggerHeal(p);
+    } else if (code === 'KeyU' || code === 'KeyR') {
+        triggerUltimate(p, state.enemy);
+    }
+}
+
+window.addEventListener('keydown', (e) => {
+    if (!keys[e.code]) {
+        const now = performance.now();
+        if ((e.code === 'KeyA' || e.code === 'ArrowLeft' || e.code === 'KeyD' || e.code === 'ArrowRight') && state.inCombat && state.player) {
+            if (now - (lastTapTime[e.code] || 0) < 240) {
+                const dir = (e.code === 'KeyA' || e.code === 'ArrowLeft') ? -1 : 1;
+                state.player.vx = dir * 680;
+                state.player.dashTimer = 0.18;
+                sfx.playSwing(false);
+            }
+            lastTapTime[e.code] = now;
+        }
+        handleActionKey(e.code);
+    }
+    keys[e.code] = true;
+});
+
+window.addEventListener('keyup', (e) => {
+    keys[e.code] = false;
+});
+
+document.querySelectorAll('.touch-btn').forEach(btn => {
+    const code = btn.getAttribute('data-key');
+    const press = (ev) => {
+        ev.preventDefault();
+        keys[code] = true;
+        handleActionKey(code);
+    };
+    const release = (ev) => {
+        ev.preventDefault();
+        keys[code] = false;
+    };
+    btn.addEventListener('touchstart', press, { passive: false });
+    btn.addEventListener('touchend', release, { passive: false });
+    btn.addEventListener('mousedown', press);
+    btn.addEventListener('mouseup', release);
+});
+
+window.addEventListener('resize', () => {
+    initStarfield();
+    if (state.inCombat) {
+        gameCanvas.width = window.innerWidth;
+        gameCanvas.height = window.innerHeight;
+        state.floorY = gameCanvas.height * 0.84;
+    }
+});
+
+let lastFrameTime = performance.now();
+function gameLoop(now) {
+    const dt = Math.min(0.05, (now - lastFrameTime) / 1000);
+    lastFrameTime = now;
+    const timeSec = now / 1000;
+
+    renderStarfield();
+    updatePreview(timeSec);
+    updateCombat(dt);
+    renderCombat(timeSec);
+
+    requestAnimationFrame(gameLoop);
+}
+
+window.onload = function () {
+    initStarfield();
+    loadProgress();
+    renderSetupUI();
+
+    const params = new URLSearchParams(window.location.search);
+    const roomParam = params.get('room');
+    if (roomParam) {
+        document.getElementById('mp-room-input').value = roomParam.toUpperCase();
+        showScreen('mp-screen');
+    }
+
+    requestAnimationFrame(gameLoop);
+};
+</script>
+</body>
+</html>
