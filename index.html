@@ -878,14 +878,19 @@
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
                     <div class="char-card jedi" style="padding: 14px; cursor: default;">
                         <div class="char-card-name" style="color: #38bdf8;">FORGE RANDOM HILT</div>
-                        <div class="char-card-role" style="margin: 6px 0;">Unlocks 1 random locked Lightsaber Style</div>
+                        <div class="char-card-role" style="margin: 6px 0;">Tiered Roll: Common ➔ Legendary Hilts</div>
                         <button id="btn-buy-saber" class="btn-sci btn-small" style="width: 100%; margin-top: 6px;">300 ◈</button>
                     </div>
                     <div class="char-card sith" style="padding: 14px; cursor: default;">
                         <div class="char-card-name" style="color: #facc15;">FORGE KYBER CRYSTAL</div>
-                        <div class="char-card-role" style="margin: 6px 0;">Unlocks 1 random locked Blade Color</div>
+                        <div class="char-card-role" style="margin: 6px 0;">Tiered Roll: Common ➔ Mythic Crystals</div>
                         <button id="btn-buy-color" class="btn-sci gold-btn btn-small" style="width: 100%; margin-top: 6px;">200 ◈</button>
                     </div>
+                </div>
+
+                <div id="forge-reel-box" style="display: none; background: radial-gradient(circle, rgba(30,41,59,0.95), rgba(4,7,13,0.98)); border: 2px solid #facc15; border-radius: 10px; padding: 12px; text-align: center; margin-bottom: 10px; box-shadow: 0 0 22px rgba(250,204,21,0.35);">
+                    <div id="forge-reel-tier" style="font-family: 'Orbitron', sans-serif; font-size: 0.68rem; letter-spacing: 0.16em; color: #38bdf8; margin-bottom: 4px;">ATTUNING KYBER MATRIX...</div>
+                    <div id="forge-reel-item" style="font-family: 'Orbitron', sans-serif; font-weight: 900; font-size: 1.05rem; color: #ffffff; text-shadow: 0 0 12px rgba(250,204,21,0.7);">---</div>
                 </div>
 
                 <div id="forge-result-box" style="min-height: 44px; background: rgba(15,23,42,0.85); border: 1px dashed rgba(250,204,21,0.45); border-radius: 8px; padding: 10px; text-align: center; font-family: 'Orbitron', sans-serif; font-size: 0.82rem; color: #facc15; margin-bottom: 14px;">
@@ -1710,75 +1715,109 @@ const SABER_STYLES = [
     {
         id: 'single',
         name: 'SINGLE HILT',
+        tier: 'COMMON',
+        weight: 0,
+        excludeFromRoll: true,
         desc: 'Classic balanced Jedi/Sith hilt.',
         unlockCondition: { type: 'starter', label: 'UNLOCKED' }
     },
     {
         id: 'crossguard',
         name: 'CROSSGUARD',
+        tier: 'COMMON',
+        weight: 0,
+        excludeFromRoll: true,
         desc: 'Cracked crystal vents with twin side quillons.',
         unlockCondition: { type: 'starter', label: 'UNLOCKED' }
     },
     {
         id: 'curved_hilt',
         name: 'CURVED MAKASHI',
+        tier: 'COMMON',
+        weight: 45,
         desc: 'Angled fencing grip for extended precision reach.',
-        unlockCondition: { type: 'wins', count: 3, label: '3 WINS OR FORGE' }
+        unlockCondition: { type: 'wins', count: 3, label: 'COMMON • 3 WINS OR FORGE' }
     },
     {
         id: 'switchblade',
         name: 'SWITCHBLADE',
+        tier: 'RARE',
+        weight: 28,
         desc: 'Hinged Temple Guard folding twin-pike saber.',
-        unlockCondition: { type: 'achievement', achId: 'flawless_defense', label: '85%+ HP WIN OR FORGE' }
-    },
-    {
-        id: 'darksaber',
-        name: 'DARKSABER',
-        desc: 'Ancient black-plasma Mandalorian flat blade.',
-        unlockCondition: { type: 'wins', count: 4, label: '4 WINS OR FORGE' }
+        unlockCondition: { type: 'achievement', achId: 'flawless_defense', label: 'RARE • 85%+ HP WIN OR FORGE' }
     },
     {
         id: 'broad_claymore',
         name: 'GREAT CLAYMORE',
+        tier: 'RARE',
+        weight: 26,
         desc: 'Extra-wide heavy plasma greatsword blade.',
-        unlockCondition: { type: 'achievement', achId: 'no_ult_win', label: 'WIN WITHOUT ULT OR FORGE' }
+        unlockCondition: { type: 'achievement', achId: 'no_ult_win', label: 'RARE • NO ULT WIN OR FORGE' }
     },
     {
         id: 'shoto_dual',
         name: 'DUAL SHOTO',
+        tier: 'EPIC',
+        weight: 16,
         desc: 'Wield two lightsabers simultaneously (Ahsoka style).',
-        unlockCondition: { type: 'wins', count: 6, label: '6 WINS OR FORGE' }
+        unlockCondition: { type: 'wins', count: 6, label: 'EPIC • 6 WINS OR FORGE' }
     },
     {
         id: 'double_bladed',
         name: 'SABERSTAFF',
-        desc: 'Lethal double-bladed Sith staff.',
-        unlockCondition: { type: 'defeat', targetId: 'darth_maul', label: 'DEFEAT MAUL OR FORGE' }
+        tier: 'EPIC',
+        weight: 0,
+        excludeFromRoll: true,
+        desc: 'Lethal double-bladed Sith staff (Duel Exclusive).',
+        unlockCondition: { type: 'defeat', targetId: 'darth_maul', label: 'DEFEAT MAUL ONLY (NO ROLL)' }
     },
     {
-        id: 'grievous_four',
-        name: '4-BLADE QUAD',
-        desc: '4 spinning blades + unlocks Quad-Blade Buzzsaw!',
-        unlockCondition: { type: 'wins', count: 7, label: '7 WINS OR FORGE' }
+        id: 'darksaber',
+        name: 'DARKSABER',
+        tier: 'LEGENDARY',
+        weight: 0,
+        excludeFromRoll: true,
+        desc: 'Ancient black-plasma Mandalorian blade (Milestone Exclusive).',
+        unlockCondition: { type: 'wins', count: 4, label: '4 WINS ONLY (NO ROLL)' }
     },
     {
         id: 'force_pike',
         name: 'GRAND INQUISITOR',
-        desc: 'Spinning ring-emitter Sith inquisitor blade.',
-        unlockCondition: { type: 'achievement', achId: 'force_only', label: 'FORCE ONLY WIN OR FORGE' }
+        tier: 'EPIC',
+        weight: 14,
+        rollOnly: true,
+        desc: 'Spinning ring-emitter Sith blade (Forge Exclusive).',
+        unlockCondition: { type: 'roll_only', label: 'EPIC • FORGE ROLL ONLY' }
+    },
+    {
+        id: 'unstable_relic',
+        name: 'MALACHOR RELIC',
+        tier: 'LEGENDARY',
+        weight: 8,
+        rollOnly: true,
+        desc: 'Ancient twin-vented Sith relic with wide reach (Forge Exclusive).',
+        unlockCondition: { type: 'roll_only', label: 'LEGENDARY • FORGE ROLL ONLY' }
+    },
+    {
+        id: 'grievous_four',
+        name: '4-BLADE QUAD',
+        tier: 'MYTHIC',
+        weight: 5,
+        desc: '4 spinning blades + unlocks Quad-Blade Buzzsaw!',
+        unlockCondition: { type: 'wins', count: 7, label: 'MYTHIC • 7 WINS OR FORGE' }
     }
 ];
 
 const SABER_COLORS = [
-    { id: 'blue', name: 'Guardian Blue', core: '#ffffff', glow: '#0ea5e9', starter: true },
-    { id: 'red', name: 'Crimson Sith', core: '#ffffff', glow: '#ef4444', starter: true },
-    { id: 'green', name: 'Consular Green', core: '#ffffff', glow: '#22c55e', unlockLabel: '2 WINS OR FORGE' },
-    { id: 'yellow', name: 'Sentinel Yellow', core: '#ffffff', glow: '#eab308', unlockLabel: 'FORGE OR SPEEDRUN' },
-    { id: 'purple', name: 'Amethyst Purple', core: '#ffffff', glow: '#a855f7', unlockLabel: '6 WINS OR FORGE' },
-    { id: 'white', name: 'Purified White', core: '#ffffff', glow: '#e2e8f0', unlockLabel: 'COMBO ACHIEVEMENT OR FORGE' },
-    { id: 'orange', name: 'Solar Orange', core: '#ffffff', glow: '#f97316', unlockLabel: 'FORGE CRATE' },
-    { id: 'darksaber', name: 'Mandalorian Darksaber', core: '#020617', glow: '#f8fafc', isDarksaber: true, unlockLabel: '4 WINS OR FORGE' },
-    { id: 'grievous_trophy', name: 'Trophy Dual (Blue/Green)', core: '#ffffff', glow: '#0ea5e9', secondaryGlow: '#22c55e', unlockLabel: '7 WINS OR FORGE' }
+    { id: 'blue', name: 'Guardian Blue', tier: 'COMMON', weight: 40, core: '#ffffff', glow: '#0ea5e9', starter: true },
+    { id: 'red', name: 'Crimson Sith', tier: 'COMMON', weight: 40, core: '#ffffff', glow: '#ef4444', starter: true },
+    { id: 'green', name: 'Consular Green', tier: 'COMMON', weight: 42, core: '#ffffff', glow: '#22c55e', unlockLabel: 'COMMON • 2 WINS OR FORGE' },
+    { id: 'yellow', name: 'Sentinel Yellow', tier: 'RARE', weight: 28, core: '#ffffff', glow: '#eab308', unlockLabel: 'RARE • SPEEDRUN OR FORGE' },
+    { id: 'orange', name: 'Solar Orange', tier: 'RARE', weight: 26, core: '#ffffff', glow: '#f97316', unlockLabel: 'RARE • FORGE CRATE' },
+    { id: 'purple', name: 'Amethyst Purple', tier: 'EPIC', weight: 15, core: '#ffffff', glow: '#a855f7', unlockLabel: 'EPIC • 6 WINS OR FORGE' },
+    { id: 'white', name: 'Purified White', tier: 'EPIC', weight: 14, core: '#ffffff', glow: '#e2e8f0', unlockLabel: 'EPIC • COMBO ACHIEVEMENT OR FORGE' },
+    { id: 'darksaber', name: 'Mandalorian Darksaber', tier: 'LEGENDARY', weight: 7, core: '#020617', glow: '#f8fafc', isDarksaber: true, unlockLabel: 'LEGENDARY • 4 WINS OR FORGE' },
+    { id: 'grievous_trophy', name: 'Trophy Dual (Blue/Green)', tier: 'MYTHIC', weight: 4, core: '#ffffff', glow: '#0ea5e9', secondaryGlow: '#22c55e', unlockLabel: 'MYTHIC • 7 WINS OR FORGE' }
 ];
 
 const ACHIEVEMENTS_DEF = [
@@ -2015,6 +2054,7 @@ function isSaberStyleUnlocked(style) {
     if (playerProgress.unlockedSabers.includes(style.id)) return true;
     const cond = style.unlockCondition;
     if (!cond || cond.type === 'starter') return true;
+    if (cond.type === 'roll_only') return false;
     if (cond.type === 'wins') return playerProgress.wins >= cond.count;
     if (cond.type === 'defeat') return playerProgress.defeatedIds.includes(cond.targetId);
     if (cond.type === 'achievement') return playerProgress.achievements.includes(cond.achId);
@@ -2568,8 +2608,11 @@ function drawFighterModel(targetCtx, f, timeSec) {
         // Primary forward blade
         drawSaberBlade(targetCtx, 14, 0, 14 + bladeLen, 0, colorObj, bladeWidth);
 
-        if (styleId === 'crossguard') {
-            drawSaberBlade(targetCtx, 16, -16, 16, 16, colorObj, 4);
+        if (styleId === 'crossguard' || styleId === 'unstable_relic') {
+            drawSaberBlade(targetCtx, 16, -16, 16, 16, colorObj, styleId === 'unstable_relic' ? 5 : 4);
+            if (styleId === 'unstable_relic') {
+                drawSaberBlade(targetCtx, 14, -4, 14 + bladeLen * 1.12, -4, colorObj, 3);
+            }
         } else if (styleId === 'double_bladed' || styleId === 'switchblade') {
             drawSaberBlade(targetCtx, -4, 0, -4 - bladeLen * 0.88, 0, colorObj, 5);
         } else if (styleId === 'force_pike') {
@@ -2673,6 +2716,11 @@ function createFighter(charId, x, facing, isPlayer, customStyleId, customColorId
         maxHp,
         force: 100,
         maxForce: 100,
+        blockStamina: 100,
+        maxBlockStamina: 100,
+        blockStartTime: 0,
+        guardBreakTimer: 0,
+        healCooldown: 0,
         forceRegen: char.forceRegen + (tr.frc - 1) * 4,
         moveSpeed: char.moveSpeed + (tr.spd - 1) * 18,
         damageMult: char.damageMult * (1 + (tr.atk - 1) * 0.07),
@@ -2799,8 +2847,8 @@ function triggerAttack(f, type = 'light') {
 }
 
 function triggerSpecial(f, fromNetwork = false) {
-    if (state.introTimer > 0 || state.victoryWinner || f.force < 30 || f.stunTimer > 0) return;
-    f.force -= 30;
+    if (state.introTimer > 0 || state.victoryWinner || f.force < 35 || f.stunTimer > 0 || f.guardBreakTimer > 0) return;
+    f.force -= 35;
     if (f.isPlayer && mp.active && mp.channel && !fromNetwork) {
         try { mp.channel.send({ type: 'broadcast', event: 'special_event', payload: {} }); } catch (e) {}
     }
@@ -2820,45 +2868,86 @@ function triggerSpecial(f, fromNetwork = false) {
                 owner: f,
                 x: f.x + f.facing * (28 + i * 24),
                 y: f.y - 62,
-                vx: f.facing * 780,
+                vx: f.facing * 720,
                 vy: 0,
-                damage: 16 * f.damageMult,
+                damage: 15 * f.damageMult,
                 color: '#facc15',
                 radius: 7,
-                life: 1.4,
+                life: 0.65,
                 kind: 'blaster'
             });
         }
         addFloatingText(f.x, f.y - 95, 'IB-94 BLASTER!', '#facc15');
     } else {
+        // Close-to-mid-range Force Wave / Arc Lightning (non-infinite range)
         sfx.playForce(isSith);
+        const reach = isSith ? 255 : 235;
+        const target = f === state.player ? state.enemy : state.player;
+        const beamColor = isSith ? '#ef4444' : '#38bdf8';
+
+        // Visual short-range Force shockwave / lightning bolt effect
         state.projectiles.push({
             owner: f,
-            x: f.x + f.facing * 32,
-            y: f.y - 58,
-            vx: f.facing * (isSith ? 660 : 580),
+            x: f.x + f.facing * 34,
+            y: f.y - 56,
+            vx: f.facing * (isSith ? 640 : 600),
             vy: 0,
-            damage: (isSith ? 24 : 20) * f.damageMult,
-            color: isSith ? '#ef4444' : '#38bdf8',
-            radius: 18,
-            life: 1.1,
+            damage: 0,
+            color: beamColor,
+            radius: isSith ? 15 : 22,
+            life: 0.32,
+            visualOnly: true,
             kind: isSith ? 'lightning' : 'push'
         });
-        addFloatingText(f.x, f.y - 95, isSith ? 'FORCE LIGHTNING!' : 'FORCE PUSH!', isSith ? '#ef4444' : '#38bdf8');
+
+        // Push nearby boulders within Force cone
+        for (const r of state.rocks) {
+            const rdx = r.x - f.x;
+            if (Math.sign(rdx) === f.facing && Math.abs(rdx) <= reach + 30 && Math.abs(r.y - (f.y - 45)) < 75) {
+                r.vx = f.facing * 680;
+                r.vy = -210;
+            }
+        }
+
+        if (target) {
+            const dx = target.x - f.x;
+            const dy = Math.abs(target.y - f.y);
+            if (Math.sign(dx) === f.facing && Math.abs(dx) <= reach && dy <= 76) {
+                if (target.blocking && target.blockStamina > 12 && Math.sign(f.x - target.x) === target.facing) {
+                    target.blockStamina = Math.max(0, target.blockStamina - 24);
+                    target.vx = f.facing * 170;
+                    sfx.playClash();
+                    spawnParticles(target.x, target.y - 55, '#38bdf8', 14, 180);
+                    addFloatingText(target.x, target.y - 90, 'FORCE ABSORBED!', '#38bdf8');
+                } else {
+                    const dmg = Math.round((isSith ? 21 : 17) * f.damageMult);
+                    target.hp = Math.max(0, target.hp - dmg);
+                    target.hurtTimer = 0.24;
+                    target.vx = f.facing * (isSith ? 240 : 410);
+                    if (!isSith) target.vy = -170;
+                    sfx.playHit();
+                    spawnParticles(target.x, target.y - 52, beamColor, 18, 230);
+                    addFloatingText(target.x, target.y - 88, `-${dmg}`, beamColor);
+                }
+            }
+        }
+        addFloatingText(f.x, f.y - 95, isSith ? 'FORCE LIGHTNING!' : 'FORCE PUSH!', beamColor);
     }
 }
 
 function triggerHeal(f, fromNetwork = false) {
-    if (state.introTimer > 0 || state.victoryWinner || f.force < 50 || f.hp >= f.maxHp) return;
-    f.force -= 50;
+    if (state.introTimer > 0 || state.victoryWinner || f.force < 75 || f.hp >= f.maxHp || f.healCooldown > 0 || f.guardBreakTimer > 0) return;
+    f.force -= 75;
+    f.healCooldown = 14.0;
+    f.stunTimer = 0.35;
     if (f.isPlayer && mp.active && mp.channel && !fromNetwork) {
         try { mp.channel.send({ type: 'broadcast', event: 'heal_event', payload: {} }); } catch (e) {}
     }
-    const healAmt = Math.round(f.maxHp * 0.22);
+    const healAmt = Math.round(f.maxHp * 0.11);
     f.hp = Math.min(f.maxHp, f.hp + healAmt);
     sfx.playHeal();
-    spawnParticles(f.x, f.y - 50, '#4ade80', 18, 180);
-    addFloatingText(f.x, f.y - 105, `+${healAmt} FORCE HEAL`, '#4ade80');
+    spawnParticles(f.x, f.y - 50, '#4ade80', 14, 150);
+    addFloatingText(f.x, f.y - 105, `+${healAmt} MEDITATE`, '#4ade80');
 }
 
 function triggerUltimate(f, target, fromNetwork = false) {
@@ -2912,6 +3001,8 @@ function updateFighterPhysics(f, dt) {
     if (f.attackTimer > 0) f.attackTimer = Math.max(0, f.attackTimer - dt);
     if (f.hurtTimer > 0) f.hurtTimer = Math.max(0, f.hurtTimer - dt);
     if (f.stunTimer > 0) f.stunTimer = Math.max(0, f.stunTimer - dt);
+    if (f.guardBreakTimer > 0) f.guardBreakTimer = Math.max(0, f.guardBreakTimer - dt);
+    if (f.healCooldown > 0) f.healCooldown = Math.max(0, f.healCooldown - dt);
     if (f.dashTimer > 0) f.dashTimer = Math.max(0, f.dashTimer - dt);
     if (f.comboResetTimer > 0) {
         f.comboResetTimer -= dt;
@@ -2920,27 +3011,34 @@ function updateFighterPhysics(f, dt) {
 
     f.force = Math.min(f.maxForce, f.force + f.forceRegen * dt);
 
-    const prevY = f.y;
-    f.vy += 1450 * dt;
-    f.x += f.vx * dt;
-    f.y += f.vy * dt;
-
-    if (f.dashTimer <= 0) {
-        f.vx *= Math.pow(0.001, dt);
+    if (f.blocking) {
+        f.blockStamina = Math.max(0, f.blockStamina - 16 * dt);
+        if (f.blockStamina <= 0) {
+            f.blocking = false;
+            f.guardBreakTimer = 1.15;
+            f.stunTimer = 1.15;
+            sfx.playClash();
+            addFloatingText(f.x, f.y - 98, 'GUARD BROKEN!', '#ef4444');
+        }
+    } else if (f.guardBreakTimer <= 0) {
+        f.blockStamina = Math.min(f.maxBlockStamina, f.blockStamina + 24 * dt);
     }
 
-    const margin = 36;
-    if (f.x < margin) f.x = margin;
-    if (f.x > gameCanvas.width - margin) f.x = gameCanvas.width - margin;
+    const prevY = f.y;
+    f.vy += 1550 * dt;
+    f.x += f.vx * dt;
+    f.y += f.vy * dt;
+    f.vx *= Math.pow(0.015, dt);
 
+    const w = gameCanvas.width || 1000;
+    f.x = Math.max(28, Math.min(w - 28, f.x));
     f.grounded = false;
-    if (f.vy >= 0) {
-        for (const p of state.platforms) {
-            if (f.x >= p.x && f.x <= p.x + p.w && prevY <= p.y && f.y >= p.y) {
-                f.y = p.y;
-                f.vy = 0;
-                f.grounded = true;
-            }
+
+    for (const plat of state.platforms) {
+        if (f.vy >= 0 && prevY <= plat.y + 8 && f.y >= plat.y && f.x >= plat.x && f.x <= plat.x + plat.w) {
+            f.y = plat.y;
+            f.vy = 0;
+            f.grounded = true;
         }
     }
 
@@ -2966,7 +3064,7 @@ function resolveMeleeHit(attacker, defender) {
     const progress = 1 - (attacker.attackTimer / attacker.attackDuration);
     if (progress < 0.25 || progress > 0.75) return;
 
-    const reach = attacker.saberStyleId === 'broad_claymore' ? 112 : 96;
+    const reach = (attacker.saberStyleId === 'broad_claymore' || attacker.saberStyleId === 'unstable_relic') ? 112 : 96;
     const dx = defender.x - attacker.x;
     const dy = Math.abs(defender.y - attacker.y);
     if (Math.sign(dx) !== attacker.facing || Math.abs(dx) > reach || dy > 78) return;
@@ -2985,12 +3083,47 @@ function resolveMeleeHit(attacker, defender) {
         return;
     }
 
-    if (defender.blocking && Math.sign(attacker.x - defender.x) === defender.facing && attacker.attackType !== 'heavy') {
-        sfx.playClash();
-        defender.vx = attacker.facing * 140;
-        spawnParticles(defender.x, defender.y - 55, '#38bdf8', 12, 180);
-        addFloatingText(defender.x, defender.y - 90, 'DEFLECTED!', '#38bdf8');
-        return;
+    const facingAttacker = Math.sign(attacker.x - defender.x) === defender.facing;
+    if (defender.blocking && facingAttacker && defender.blockStamina > 0) {
+        const blockAge = performance.now() - defender.blockStartTime;
+        const isPerfectParry = blockAge <= 210;
+
+        if (isPerfectParry) {
+            attacker.stunTimer = 0.55;
+            attacker.vx = -attacker.facing * 290;
+            defender.blockStamina = Math.min(defender.maxBlockStamina, defender.blockStamina + 18);
+            sfx.playClash();
+            spawnParticles(defender.x, defender.y - 55, '#facc15', 20, 240);
+            addFloatingText(defender.x, defender.y - 96, 'PERFECT PARRY!', '#facc15');
+            return;
+        }
+
+        if (attacker.attackType === 'heavy') {
+            defender.blockStamina = Math.max(0, defender.blockStamina - 52);
+            if (defender.blockStamina <= 0) {
+                defender.blocking = false;
+                defender.guardBreakTimer = 1.15;
+                defender.stunTimer = 1.15;
+                sfx.playClash();
+                addFloatingText(defender.x, defender.y - 96, 'GUARD SHATTERED!', '#ef4444');
+            } else {
+                const chipDmg = Math.round(9 * attacker.damageMult);
+                defender.hp = Math.max(0, defender.hp - chipDmg);
+                defender.vx = attacker.facing * 220;
+                sfx.playClash();
+                addFloatingText(defender.x, defender.y - 92, `HEAVY BLOCK -${chipDmg}`, '#fb923c');
+                return;
+            }
+        } else {
+            defender.blockStamina = Math.max(0, defender.blockStamina - 22);
+            const chipDmg = Math.max(2, Math.round(3 * attacker.damageMult));
+            defender.hp = Math.max(0, defender.hp - chipDmg);
+            defender.vx = attacker.facing * 145;
+            sfx.playClash();
+            spawnParticles(defender.x, defender.y - 55, '#38bdf8', 12, 180);
+            addFloatingText(defender.x, defender.y - 90, `BLOCKED (-${chipDmg})`, '#38bdf8');
+            return;
+        }
     }
 
     const baseDmg = attacker.attackType === 'heavy' ? 24 : (13 + attacker.comboStep * 2);
@@ -3151,7 +3284,11 @@ function updateCombat(dt) {
             p.vx = moveDir * p.moveSpeed;
             p.facing = moveDir;
         }
-        p.blocking = !!(keys['KeyS'] || keys['ArrowDown'] || keys['ShiftLeft'] || keys['ShiftRight']);
+        const wantsBlock = !!(keys['KeyS'] || keys['ArrowDown'] || keys['ShiftLeft'] || keys['ShiftRight']) && p.guardBreakTimer <= 0 && p.blockStamina > 5;
+        if (wantsBlock && !p.blocking) {
+            p.blockStartTime = performance.now();
+        }
+        p.blocking = wantsBlock;
     }
 
     updateFighterPhysics(state.player, dt);
@@ -3182,12 +3319,13 @@ function updateCombat(dt) {
         }
 
         const target = proj.owner === state.player ? state.enemy : state.player;
-        if (target && Math.abs(proj.x - target.x) < 28 + proj.radius && Math.abs(proj.y - (target.y - 52)) < 52) {
-            if (target.blocking && Math.sign(proj.owner.x - target.x) === target.facing) {
+        if (!proj.visualOnly && target && Math.abs(proj.x - target.x) < 28 + proj.radius && Math.abs(proj.y - (target.y - 52)) < 52) {
+            if (target.blocking && target.blockStamina > 10 && Math.sign(proj.owner.x - target.x) === target.facing) {
                 proj.vx = -proj.vx;
                 proj.owner = target;
+                target.blockStamina = Math.max(0, target.blockStamina - 20);
                 sfx.playClash();
-                addFloatingText(target.x, target.y - 90, 'DEFLECTED!', '#38bdf8');
+                addFloatingText(target.x, target.y - 90, 'BOLT DEFLECTED!', '#38bdf8');
             } else {
                 const dmg = Math.round(proj.damage);
                 target.hp = Math.max(0, target.hp - dmg);
@@ -3261,10 +3399,18 @@ function drawFighterHUD(f, x, y, width, alignRight) {
     ctx.fillStyle = '#facc15';
     ctx.fillRect(alignRight ? x + width - frcFillW : x, y + 20, frcFillW, 8);
 
+    // Block Guard Stamina Bar
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+    ctx.fillRect(x, y + 31, width * 0.52, 5);
+    const guardFillW = (width * 0.52) * (f.blockStamina / f.maxBlockStamina);
+    ctx.fillStyle = f.guardBreakTimer > 0 ? '#ef4444' : '#38bdf8';
+    ctx.fillRect(alignRight ? x + width - guardFillW : x, y + 31, guardFillW, 5);
+
     ctx.font = '700 11px Orbitron, sans-serif';
     ctx.textAlign = alignRight ? 'right' : 'left';
     ctx.fillStyle = f.ultimateUsed ? '#64748b' : '#facc15';
-    ctx.fillText(f.ultimateUsed ? 'ULTIMATE SPENT' : '★ ALL-OUT READY [U/R]', alignRight ? x + width : x, y + 43);
+    const healTag = f.healCooldown > 0 ? ` • HEAL ${Math.ceil(f.healCooldown)}s` : '';
+    ctx.fillText((f.ultimateUsed ? 'ULT SPENT' : '★ ULT READY [U/R]') + healTag, alignRight ? x + width : x, y + 51);
     ctx.restore();
 }
 
@@ -3330,6 +3476,23 @@ function renderCombat(timeSec) {
 
     if (state.player) drawFighterModel(ctx, state.player, timeSec);
     if (state.enemy) drawFighterModel(ctx, state.enemy, timeSec);
+
+    // Draw Energy Shield Arc when Blocking
+    [state.player, state.enemy].forEach(f => {
+        if (!f || !f.blocking) return;
+        const isParryWindow = (performance.now() - f.blockStartTime) <= 210;
+        ctx.save();
+        ctx.strokeStyle = isParryWindow ? '#facc15' : '#38bdf8';
+        ctx.shadowColor = isParryWindow ? '#facc15' : '#38bdf8';
+        ctx.shadowBlur = 14;
+        ctx.lineWidth = isParryWindow ? 4.5 : 3;
+        ctx.beginPath();
+        const startAng = f.facing === 1 ? -0.95 : Math.PI - 0.95;
+        const endAng = f.facing === 1 ? 0.95 : Math.PI + 0.95;
+        ctx.arc(f.x + f.facing * 12, f.y - 54, 42, startAng, endAng);
+        ctx.stroke();
+        ctx.restore();
+    });
 
     for (const proj of state.projectiles) {
         ctx.save();
@@ -3619,11 +3782,72 @@ document.getElementById('difficulty-select').onchange = (e) => {
 document.getElementById('btn-open-shop').onclick = () => showScreen('shop-screen');
 document.getElementById('btn-close-shop').onclick = () => showScreen('char-screen');
 
+let forgeSpinning = false;
+const TIER_COLORS = {
+    COMMON: '#94a3b8',
+    RARE: '#38bdf8',
+    EPIC: '#a855f7',
+    LEGENDARY: '#facc15',
+    MYTHIC: '#ef4444'
+};
+
+function pickWeightedItem(pool) {
+    const totalWeight = pool.reduce((sum, item) => sum + (item.weight || 10), 0);
+    let roll = Math.random() * totalWeight;
+    for (const item of pool) {
+        roll -= (item.weight || 10);
+        if (roll <= 0) return item;
+    }
+    return pool[pool.length - 1];
+}
+
+function runForgeRollAnimation(displayPool, finalPick, onComplete) {
+    forgeSpinning = true;
+    const reelBox = document.getElementById('forge-reel-box');
+    const reelTier = document.getElementById('forge-reel-tier');
+    const reelItem = document.getElementById('forge-reel-item');
+    reelBox.style.display = 'block';
+
+    // Build a suspenseful sequence favoring higher-tier sabers/colors visually while keeping the exact weighted outcome
+    const highTierPool = displayPool.filter(i => i.tier === 'EPIC' || i.tier === 'LEGENDARY' || i.tier === 'MYTHIC');
+    const totalSteps = 22;
+    let step = 0;
+
+    function tick() {
+        step++;
+        const isLast = step >= totalSteps;
+        let shown = finalPick;
+        if (!isLast) {
+            const source = (highTierPool.length > 0 && Math.random() < 0.65) ? highTierPool : displayPool;
+            shown = source[Math.floor(Math.random() * source.length)];
+        }
+        const tColor = TIER_COLORS[shown.tier] || '#facc15';
+        reelBox.style.borderColor = tColor;
+        reelTier.style.color = tColor;
+        reelTier.textContent = isLast ? `★ ${shown.tier} UNLOCKED ★` : `${shown.tier} TIER`;
+        reelItem.style.color = isLast ? '#ffffff' : tColor;
+        reelItem.textContent = shown.name.toUpperCase();
+        sfx.playSwing(isLast);
+
+        if (isLast) {
+            forgeSpinning = false;
+            sfx.playIgnite();
+            onComplete();
+        } else {
+            const delay = 45 + Math.pow(step / totalSteps, 2.3) * 240;
+            setTimeout(tick, delay);
+        }
+    }
+    tick();
+}
+
 document.getElementById('btn-buy-saber').onclick = () => {
-    const locked = SABER_STYLES.filter(s => !isSaberStyleUnlocked(s));
+    if (forgeSpinning) return;
+    const rollablePool = SABER_STYLES.filter(s => !s.excludeFromRoll);
+    const locked = rollablePool.filter(s => !isSaberStyleUnlocked(s));
     const resBox = document.getElementById('forge-result-box');
     if (locked.length === 0) {
-        resBox.textContent = 'ALL LIGHTSABER HILTS ALREADY UNLOCKED!';
+        resBox.textContent = 'ALL FORGEABLE LIGHTSABER HILTS UNLOCKED! (OTHERS REQUIRE MILESTONES)';
         return;
     }
     if (playerProgress.credits < 300) {
@@ -3632,17 +3856,21 @@ document.getElementById('btn-buy-saber').onclick = () => {
         return;
     }
     playerProgress.credits -= 300;
-    const pick = locked[Math.floor(Math.random() * locked.length)];
+    const pick = pickWeightedItem(locked);
     playerProgress.unlockedSabers.push(pick.id);
     state.selectedSaberStyleId = pick.id;
-    sfx.playIgnite();
     saveProgress();
-    resBox.textContent = `★ FORGED NEW HILT: ${pick.name}! ★`;
-    renderShopAndDojo();
-    renderSetupUI();
+    resBox.textContent = 'FORGING HILT MATRIX...';
+
+    runForgeRollAnimation(rollablePool, pick, () => {
+        resBox.textContent = `★ [${pick.tier}] FORGED NEW HILT: ${pick.name}! ★`;
+        renderShopAndDojo();
+        renderSetupUI();
+    });
 };
 
 document.getElementById('btn-buy-color').onclick = () => {
+    if (forgeSpinning) return;
     const locked = SABER_COLORS.filter(c => !isColorUnlocked(c));
     const resBox = document.getElementById('forge-result-box');
     if (locked.length === 0) {
@@ -3655,14 +3883,17 @@ document.getElementById('btn-buy-color').onclick = () => {
         return;
     }
     playerProgress.credits -= 200;
-    const pick = locked[Math.floor(Math.random() * locked.length)];
+    const pick = pickWeightedItem(locked);
     playerProgress.unlockedColors.push(pick.id);
     state.selectedSaberColorId = pick.id;
-    sfx.playIgnite();
     saveProgress();
-    resBox.textContent = `★ ATTUNED KYBER CRYSTAL: ${pick.name.toUpperCase()}! ★`;
-    renderShopAndDojo();
-    renderSetupUI();
+    resBox.textContent = 'ATTUNING KYBER CRYSTAL...';
+
+    runForgeRollAnimation(SABER_COLORS, pick, () => {
+        resBox.textContent = `★ [${pick.tier}] ATTUNED CRYSTAL: ${pick.name.toUpperCase()}! ★`;
+        renderShopAndDojo();
+        renderSetupUI();
+    });
 };
 
 document.getElementById('btn-back-title').onclick = () => showScreen('title-screen');
