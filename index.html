@@ -9,7 +9,7 @@
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2304070d'/%3E%3Cline x1='16' y1='48' x2='48' y2='16' stroke='%2338bdf8' stroke-width='7' stroke-linecap='round'/%3E%3Cline x1='16' y1='48' x2='48' y2='16' stroke='%23ffffff' stroke-width='3' stroke-linecap='round'/%3E%3Cline x1='48' y1='48' x2='16' y2='16' stroke='%23ef4444' stroke-width='7' stroke-linecap='round'/%3E%3Cline x1='48' y1='48' x2='16' y2='16' stroke='%23ffffff' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4"></script>
-    <style>
+        <style>
         :root {
             --bg-space: #04070d;
             --panel-bg: rgba(11, 18, 32, 0.88);
@@ -696,9 +696,7 @@
         .match-stat-line:last-child {
             border-bottom: none;
         }
-    </style>
-
-<style>
+    
 /* ===== MOBILE OPTIMISATIONS ===== */
 :root { color-scheme: dark; }
 html { overscroll-behavior: none; -webkit-text-size-adjust: 100%; }
@@ -776,6 +774,8 @@ input, select { font-size: 16px !important; }
 .stick-knob { position: absolute; top: 3px; left: 50%; width: calc(var(--sh) - 10px); height: calc(var(--sh) - 10px); margin-left: calc((var(--sh) - 10px) / -2);
   border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,.4), rgba(56,189,248,.5)); border: 2px solid rgba(56,189,248,.85);
   box-shadow: 0 0 12px rgba(56,189,248,.5); pointer-events: none; }
+
+select.sci-select:disabled { opacity: .45; cursor: not-allowed; }
 </style>
 </head>
 <body>
@@ -795,7 +795,7 @@ input, select { font-size: 16px !important; }
             <button id="btn-open-account" class="btn-sci btn-small" style="border-color: #a855f7; color: #e9d5ff;">👤 HOLONET ACCOUNT</button>
         </div>
         <div id="global-save-status" style="margin-top: 10px; font-family: 'Orbitron', sans-serif; font-size: 0.74rem; letter-spacing: 0.12em; color: #4ade80;">
-            ● PILOT: GUEST • RANK: INITIATE (0 MP WINS)
+            ● GUEST — SIGN IN TO DUEL
         </div>
 
         <div class="touch-hint controls-card"><h3>TOUCH CONTROLS</h3><p>Duels play best in <b>landscape</b>. Use the stick on the left to move, and the buttons on the right to jump, slash, heavy strike, block, use Force powers, heal and unleash your ultimate. Flick the stick twice to dash.</p></div>
@@ -917,6 +917,12 @@ input, select { font-size: 16px !important; }
                                 <option value="8">Lv. 8 — Dark Lord (2.1x Win ◈)</option>
                                 <option value="9">Lv. 9 — Chosen One / Emperor (2.6x Win ◈)</option>
                             </select>
+                        </div>
+                        <div id="boss-row" style="display: flex; align-items: center; gap: 10px; margin-top: 10px; background: rgba(15,23,42,0.85); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(239,68,68,0.5);">
+                            <input id="boss-toggle" type="checkbox" style="width: 20px; height: 20px; accent-color: #ef4444; cursor: pointer;">
+                            <label for="boss-toggle" style="font-family: 'Orbitron', sans-serif; font-size: 0.78rem; color: #fca5a5; cursor: pointer; line-height: 1.5;">
+                                ☠ BOSS MODE<br><span style="color: #94a3b8; font-size: 0.66rem;">3× HP • LV. 9 AI • 1.4× SIZE • 5.5× CREDITS • 5 WINS UNLOCK VADER</span>
+                            </label>
                         </div>
                     </div>
                 </div>
@@ -1152,7 +1158,7 @@ input, select { font-size: 16px !important; }
         <div class="panel-card" style="max-width: 460px; width: 100%; text-align: center;">
             <div class="saber-section-title" style="color: #c084fc; font-size: 1.02rem;">HOLONET PILOT ACCOUNT</div>
             <p style="font-size: 0.88rem; color: #cbd5e1; margin-bottom: 12px;">
-                Sign in or register an account to bind your save file, display your Username in Multiplayer duels, and track your Galactic Rank!
+                An account is required to duel. Sign in or register to bind your save file, display your Username in Multiplayer duels, and track your Galactic Rank!
             </p>
             <div id="account-current-badge" style="font-family: 'Orbitron', sans-serif; font-size: 0.78rem; color: #4ade80; margin-bottom: 12px;">
                 ACTIVE PILOT: GUEST
@@ -1165,7 +1171,7 @@ input, select { font-size: 16px !important; }
                 <button id="btn-acc-register" class="btn-sci gold-btn btn-small">CREATE ACCOUNT</button>
             </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px;">
-                <button id="btn-acc-logout" class="btn-sci btn-small">SWITCH TO GUEST</button>
+                <button id="btn-acc-logout" class="btn-sci btn-small">SIGN OUT</button>
                 <button id="btn-reset-account" class="btn-sci sith-btn btn-small">🗑 RESET PROGRESS</button>
             </div>
             <button id="btn-close-account" class="btn-sci btn-small" style="width: 100%;">CLOSE</button>
@@ -1205,6 +1211,12 @@ input, select { font-size: 16px !important; }
     </div>
 
 <script>
+// ---- Boss mode tuning ----
+const BOSS_HP_MULT = 3;
+const BOSS_SIZE = 1.4;
+const BOSS_CREDIT_MULT = 5.5;
+const BOSS_WINS_FOR_VADER = 5;
+
 /**
  * GALACTIC DUEL: JEDI VS. SITH
  * Complete GitHub Pages-ready 2D Star Wars fighting game with Web Audio synthesized SFX,
@@ -1944,7 +1956,7 @@ const CHARACTERS = {
             forceRegen: 20,
             defaultColor: 'red',
             defaultStyle: 'single',
-            unlockCondition: { type: 'defeat_lvl', targetId: 'sith_lord', minLvl: 9, label: 'DEFEAT VADER ON LV. 9' },
+            unlockCondition: { type: 'boss_wins', count: BOSS_WINS_FOR_VADER, label: '5 BOSS MODE WINS' },
             appearance: {
                 robeMain: '#18181b',
                 robeTrim: '#991b1b',
@@ -2016,7 +2028,7 @@ const SABER_STYLES = [
         name: 'SWITCHBLADE',
         tier: 'RARE',
         weight: 28,
-        desc: 'Hinged Temple Guard folding twin-pike saber.',
+        desc: 'Hinged Temple Guard hilt: the rear blade folds out on every strike.',
         unlockCondition: { type: 'achievement', achId: 'flawless_defense', label: 'RARE • 85%+ HP WIN OR FORGE' }
     },
     {
@@ -2265,6 +2277,7 @@ const accountState = {
 const defaultProgress = {
     wins: 0,
     mpWins: 0,
+    bossWins: 0,
     highLvlWins: 0,
     credits: 250,
     defeatedIds: [],
@@ -2319,7 +2332,9 @@ function updateSaveIndicators(label = null) {
     const rank = getMpRank(playerProgress.mpWins || 0);
     const el = document.getElementById('global-save-status');
     if (el) {
-        el.textContent = label || `● PILOT: ${accountState.username} • RANK: ${rank.name} (${playerProgress.mpWins || 0} MP WINS)`;
+        el.textContent = label || (isSignedIn()
+            ? `● PILOT: ${accountState.username} • RANK: ${rank.name} (${playerProgress.mpWins || 0} MP WINS)`
+            : '● GUEST — SIGN IN TO DUEL');
         el.style.color = rank.color || '#4ade80';
     }
     const mpBanner = document.getElementById('mp-rank-banner');
@@ -2386,6 +2401,7 @@ function getCharTraining(charId) {
 function isCharacterUnlocked(char) {
     const cond = char.unlockCondition;
     if (!cond || cond.type === 'starter') return true;
+    if (cond.type === 'boss_wins') return (playerProgress.bossWins || 0) >= cond.count;
     if (cond.type === 'wins') return playerProgress.wins >= cond.count;
     if (cond.type === 'mp_wins') return (playerProgress.mpWins || 0) >= cond.count;
     if (cond.type === 'mp_rank') return getMpRank(playerProgress.mpWins || 0).idx >= cond.rankIdx;
@@ -2517,7 +2533,7 @@ function updateMultiplayerLoadoutBanner() {
 // 5. CUSTOMIZATION, SHOP, DOJO & MAP SELECTION UI
 // ============================================================================
 function renderSetupUI() {
-    document.getElementById('wins-counter').innerHTML = `${playerProgress.wins} <span style="font-size:0.72rem;color:#94a3b8;">(LV.8+: ${playerProgress.highLvlWins || 0})</span>`;
+    document.getElementById('wins-counter').innerHTML = `${playerProgress.wins} <span style="font-size:0.72rem;color:#94a3b8;">(LV.8+: ${playerProgress.highLvlWins || 0} • BOSS: ${playerProgress.bossWins || 0})</span>`;
     const mpWinsEl = document.getElementById('mp-wins-counter');
     if (mpWinsEl) mpWinsEl.textContent = playerProgress.mpWins || 0;
     document.getElementById('credits-counter').textContent = playerProgress.credits;
@@ -2887,7 +2903,7 @@ function drawFighterModel(targetCtx, f, timeSec) {
     const app = char.appearance;
     const colorObj = SABER_COLORS.find(c => c.id === f.saberColorId) || SABER_COLORS[0];
     const styleId = f.saberStyleId || 'single';
-    const scale = char.isYoda ? 0.72 : (char.isGrievous ? 1.12 : 1.0);
+    const scale = (char.isYoda ? 0.72 : (char.isGrievous ? 1.12 : 1.0)) * (f.sizeMult || 1);
 
     targetCtx.save();
     targetCtx.translate(f.x, f.y);
@@ -3034,7 +3050,21 @@ function drawFighterModel(targetCtx, f, timeSec) {
             targetCtx.fillRect(-5, -3.5, 21, 7);
             targetCtx.fillStyle = '#94a3b8';
             targetCtx.fillRect(12, -8, 6, 16);
-        } else if (styleId === 'double_bladed' || styleId === 'switchblade') {
+        } else if (styleId === 'switchblade') {
+            // Temple Guard hinged hilt: short body with a steel knuckle hinge at the rear
+            targetCtx.fillStyle = '#334155';
+            targetCtx.fillRect(-4, -3.5, 20, 7);
+            targetCtx.fillStyle = '#facc15';
+            targetCtx.fillRect(9, -4, 3, 8);
+            targetCtx.fillStyle = '#cbd5e1';
+            targetCtx.beginPath();
+            targetCtx.arc(-4, 0, 5, 0, Math.PI * 2);
+            targetCtx.fill();
+            targetCtx.fillStyle = '#0f172a';
+            targetCtx.beginPath();
+            targetCtx.arc(-4, 0, 2, 0, Math.PI * 2);
+            targetCtx.fill();
+        } else if (styleId === 'double_bladed') {
             targetCtx.fillStyle = '#475569';
             targetCtx.fillRect(-10, -3.5, 26, 7);
             targetCtx.fillStyle = '#ef4444';
@@ -3072,7 +3102,14 @@ function drawFighterModel(targetCtx, f, timeSec) {
                 const jitter = Math.sin(timeSec * 45) * 2.5;
                 drawSaberBlade(targetCtx, 14, -4 + jitter, 14 + bladeLen * 1.12, -4 - jitter, colorObj, 3);
             }
-        } else if (styleId === 'double_bladed' || styleId === 'switchblade') {
+        } else if (styleId === 'switchblade') {
+            // Folding rear blade: rests folded down-and-back, snaps straight out on attack / victory
+            const swTarget = (f.attackTimer > 0 || f.victoryAnim || (f.preview && Math.sin(timeSec * 2.2) > 0)) ? 1 : 0;
+            f.switchOpen = (f.switchOpen || 0) + (swTarget - (f.switchOpen || 0)) * 0.3;
+            const ang = 1.95 + (Math.PI - 1.95) * f.switchOpen;
+            const len = bladeLen * (0.28 + 0.6 * f.switchOpen);
+            drawSaberBlade(targetCtx, -4, 0, -4 + Math.cos(ang) * len, Math.sin(ang) * len, colorObj, 5);
+        } else if (styleId === 'double_bladed') {
             drawSaberBlade(targetCtx, -10, 0, -10 - bladeLen * 0.88, 0, colorObj, 5);
         } else if (styleId === 'eternal_champion_hilt') {
             drawSaberBlade(targetCtx, -10, 0, -10 - bladeLen * 0.65, 0, { core: '#ffffff', glow: '#facc15' }, 5);
@@ -3117,6 +3154,7 @@ function drawFighterModel(targetCtx, f, timeSec) {
     targetCtx.restore();
 }
 
+let previewSwitchOpen = 0;
 const previewCanvas = document.getElementById('preview-canvas');
 const pCtx = previewCanvas.getContext('2d');
 function updatePreview(timeSec) {
@@ -3148,9 +3186,12 @@ function updatePreview(timeSec) {
         victoryAnim: false,
         attackTimer: 0,
         attackDuration: 0.3,
-        hurtTimer: 0
+        hurtTimer: 0,
+        preview: true,
+        switchOpen: previewSwitchOpen
     };
     drawFighterModel(pCtx, dummyFighter, timeSec);
+    previewSwitchOpen = dummyFighter.switchOpen || 0;
 }
 
 // ============================================================================
@@ -3161,13 +3202,17 @@ const ctx = gameCanvas.getContext('2d');
 const keys = {};
 const lastTapTime = {};
 
-function createFighter(charId, x, facing, isPlayer, customStyleId, customColorId) {
+function createFighter(charId, x, facing, isPlayer, customStyleId, customColorId, boss = false) {
     const char = findCharById(charId);
     const tr = isPlayer ? getCharTraining(charId) : { atk: 1, spd: 1, frc: 1 };
-    const maxHp = char.maxHp + (tr.spd - 1) * 22;
+    const baseMaxHp = char.maxHp + (tr.spd - 1) * 22;
+    const maxHp = boss ? Math.round(baseMaxHp * BOSS_HP_MULT) : baseMaxHp;
     return {
         char,
         isPlayer,
+        isBoss: boss,
+        baseMaxHp,
+        sizeMult: boss ? BOSS_SIZE : 1,
         saberStyleId: customStyleId || char.defaultStyle,
         saberColorId: customColorId || char.defaultColor,
         x,
@@ -3228,8 +3273,10 @@ function addFloatingText(x, y, text, color = '#facc15') {
 }
 
 function startDuel(mpConfig = null) {
+    if (!isSignedIn()) { showScreen('title-screen'); requireSignIn(); return; }
     sfx.init();
     if (mpConfig) mp.lastMatchPayload = mpConfig;
+    state.bossMode = !mpConfig && !!state.bossSelected;
     gameCanvas.width = window.innerWidth;
     gameCanvas.height = window.innerHeight;
     const w = gameCanvas.width;
@@ -3251,7 +3298,7 @@ function startDuel(mpConfig = null) {
     state.victoryTimer = 0;
     state.victoryWinner = null;
     state.cameraZoom = 1;
-    state.roundTime = 150;
+    state.roundTime = state.bossMode ? 240 : 150;
     state.elapsedTime = 0;
     state.clashCount = 0;
     state.playerMaxCombo = 0;
@@ -3281,7 +3328,7 @@ function startDuel(mpConfig = null) {
         const oppChar = mpConfig ? mpConfig.guestCharId : state.opponentId;
         const oppStyle = mpConfig ? mpConfig.guestStyleId : null;
         const oppColor = mpConfig ? mpConfig.guestColorId : null;
-        state.enemy = createFighter(oppChar, w * 0.78, -1, false, oppStyle, oppColor);
+        state.enemy = createFighter(oppChar, w * 0.78, -1, false, oppStyle, oppColor, state.bossMode);
     }
 
     state.player.y = state.floorY - 140;
@@ -3452,7 +3499,7 @@ function triggerHeal(f, fromNetwork = false) {
     if (f.isPlayer && mp.active && mp.channel && !fromNetwork) {
         try { mp.channel.send({ type: 'broadcast', event: 'heal_event', payload: {} }); } catch (e) {}
     }
-    const healAmt = Math.round(f.maxHp * 0.22);
+    const healAmt = Math.round((f.baseMaxHp || f.maxHp) * 0.22);
     f.hp = Math.min(f.maxHp, f.hp + healAmt);
     sfx.playHeal();
     spawnParticles(f.x, f.y - 50, '#4ade80', 20, 180);
@@ -3559,7 +3606,7 @@ function updateFighterPhysics(f, dt) {
 
     if (!f.secondWindUsed && f.hp > 0 && f.hp <= f.maxHp * 0.25) {
         f.secondWindUsed = true;
-        const boost = Math.round(f.maxHp * 0.14);
+        const boost = Math.round((f.baseMaxHp || f.maxHp) * 0.14);
         f.hp = Math.min(f.maxHp, f.hp + boost);
         f.force = f.maxForce;
         sfx.playHeal();
@@ -3573,10 +3620,10 @@ function resolveMeleeHit(attacker, defender) {
     const progress = 1 - (attacker.attackTimer / attacker.attackDuration);
     if (progress < 0.25 || progress > 0.75) return;
 
-    const reach = (attacker.saberStyleId === 'broad_claymore' || attacker.saberStyleId === 'unstable_relic') ? 112 : 96;
+    const reach = ((attacker.saberStyleId === 'broad_claymore' || attacker.saberStyleId === 'unstable_relic') ? 112 : 96) * (attacker.sizeMult || 1);
     const dx = defender.x - attacker.x;
     const dy = Math.abs(defender.y - attacker.y);
-    if (Math.sign(dx) !== attacker.facing || Math.abs(dx) > reach || dy > 78) return;
+    if (Math.sign(dx) !== attacker.facing || Math.abs(dx) > reach || dy > 78 * Math.max(attacker.sizeMult || 1, defender.sizeMult || 1)) return;
 
     attacker.attackHitDealt = true;
 
@@ -3681,12 +3728,13 @@ function updateAI(dt) {
     const target = state.player;
     if (!ai || !target || mp.active) return;
 
-    const lvl = Math.max(1, Math.min(9, Number(state.difficulty) || 4));
+    const lvl = state.bossMode ? 9 : Math.max(1, Math.min(9, Number(state.difficulty) || 4));
     // Nerfed 1 stage across the board: Lv 1 = 0.36x, Lv 4 = 0.66x, Lv 9 = 1.16x
     const skillMult = 0.26 + lvl * 0.10;
     const dx = target.x - ai.x;
     const dy = target.y - ai.y;
     const dist = Math.abs(dx);
+    const sm = ai.sizeMult || 1;
     ai.facing = dx >= 0 ? 1 : -1;
 
     // Smooth movement & reactive defense every frame
@@ -3695,9 +3743,9 @@ function updateAI(dt) {
         if ((incomingProj || (target.attackTimer > 0 && dist < 108)) && Math.random() < 0.075 * skillMult) {
             ai.blocking = true;
         } else if (!ai.blocking) {
-            if (dist > 85) {
+            if (dist > 85 * sm) {
                 ai.vx = ai.facing * ai.moveSpeed * Math.min(1.0, 0.65 + 0.035 * lvl);
-            } else if (dist < 40 && ai.attackTimer <= 0) {
+            } else if (dist < 40 * sm && ai.attackTimer <= 0) {
                 ai.vx = -ai.facing * ai.moveSpeed * 0.42;
             }
         }
@@ -3742,7 +3790,7 @@ function updateAI(dt) {
     }
 
     // Close-quarters saber strikes
-    if (dist <= 90) {
+    if (dist <= 90 * sm) {
         if (target.blocking && Math.random() < 0.36 * skillMult) {
             triggerAttack(ai, 'heavy');
         } else {
@@ -3844,7 +3892,8 @@ function updateCombat(dt) {
         }
 
         const target = proj.owner === state.player ? state.enemy : state.player;
-        if (target && Math.abs(proj.x - target.x) < 28 + proj.radius && Math.abs(proj.y - (target.y - 52)) < 52) {
+        const tm = (target && target.sizeMult) || 1;
+        if (target && Math.abs(proj.x - target.x) < 28 * tm + proj.radius && Math.abs(proj.y - (target.y - 52 * tm)) < 52 * tm) {
             if (target.blocking && Math.sign(proj.owner.x - target.x) === target.facing) {
                 if (proj.kind === 'blaster') {
                     proj.vx = -proj.vx;
@@ -3893,7 +3942,9 @@ function updateCombat(dt) {
             }
             return;
         }
-        const winner = state.player.hp >= state.enemy.hp ? state.player : state.enemy;
+        const winner = (state.bossMode
+            ? state.player.hp / state.player.maxHp >= state.enemy.hp / state.enemy.maxHp
+            : state.player.hp >= state.enemy.hp) ? state.player : state.enemy;
         if (mp.active && mp.isHost && mp.channel) {
             try {
                 mp.channel.send({
@@ -3946,8 +3997,9 @@ function drawFighterHUD(f, x, y, width, alignRight) {
     const pilotTag = mp.active
         ? ` [${f.isPlayer ? accountState.username : mp.opponentUsername}]`
         : '';
-    fitFont(900, 15, f.char.name + pilotTag, width);
-    ctx.fillText(f.char.name + pilotTag, alignRight ? x + width : x, y - 8);
+    const hudName = (f.isBoss ? 'BOSS ' : '') + f.char.name + pilotTag;
+    fitFont(900, 15, hudName, width);
+    ctx.fillText(hudName, alignRight ? x + width : x, y - 8);
 
     ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
     ctx.fillRect(x, y, width, 16);
@@ -4033,7 +4085,7 @@ function renderCombatHUD() {
     }
 
     if (state.introTimer > 0) {
-        const introTxt = state.introTimer > 0.6 ? 'PREPARE FOR DUEL...' : 'ENGAGE!';
+        const introTxt = state.introTimer > 0.6 ? (state.bossMode ? 'BOSS BATTLE!' : 'PREPARE FOR DUEL...') : 'ENGAGE!';
         fitFont(900, 38, introTxt, w * 0.9);
         ctx.fillStyle = '#38bdf8';
         ctx.fillText(introTxt, w * 0.5, gameCanvas.height * 0.36);
@@ -4144,11 +4196,11 @@ function endDuel(winner) {
     releaseAllKeys();
     leaveFullscreen();
     const playerWon = winner === state.player;
-    const lvl = Math.max(1, Math.min(9, Number(state.difficulty) || 4));
+    const lvl = state.bossMode ? 9 : Math.max(1, Math.min(9, Number(state.difficulty) || 4));
     const winDiffTable = [0.6, 0.75, 0.9, 1.0, 1.2, 1.45, 1.75, 2.1, 2.6];
     let creditsEarned = 0;
     if (playerWon) {
-        const diffMult = mp.active ? 1.5 : winDiffTable[lvl - 1];
+        const diffMult = mp.active ? 1.5 : (state.bossMode ? BOSS_CREDIT_MULT : winDiffTable[lvl - 1]);
         creditsEarned = Math.round(115 * diffMult + state.playerMaxCombo * 12);
     } else {
         // Bell-curve defeat payout peaking at average Lv. 5 (45 ◈) and dropping off toward Lv. 1 and Lv. 9
@@ -4160,6 +4212,10 @@ function endDuel(winner) {
 
     if (playerWon) {
         playerProgress.wins += 1;
+        if (state.bossMode) {
+            playerProgress.bossWins = (playerProgress.bossWins || 0) + 1;
+            if (playerProgress.bossWins < BOSS_WINS_FOR_VADER) unlockMessages.push(`BOSS VICTORY ${playerProgress.bossWins}/${BOSS_WINS_FOR_VADER}`);
+        }
         if (mp.active) {
             const prevRank = getMpRank(playerProgress.mpWins || 0);
             playerProgress.mpWins = (playerProgress.mpWins || 0) + 1;
@@ -4207,6 +4263,7 @@ function endDuel(winner) {
                 if (cond.type === 'high_wins' && !mp.active && lvl >= cond.minLvl && playerProgress.highLvlWins === cond.count) justUnlocked = true;
                 if (cond.type === 'defeat' && cond.targetId === state.enemy.char.id) justUnlocked = true;
                 if (cond.type === 'defeat_lvl' && !mp.active && cond.targetId === state.enemy.char.id && lvl >= cond.minLvl) justUnlocked = true;
+                if (cond.type === 'boss_wins' && state.bossMode && playerProgress.bossWins === cond.count) justUnlocked = true;
                 if (cond.type === 'achievement' && playerProgress.achievements.includes(cond.achId)) justUnlocked = true;
 
                 if (justUnlocked) {
@@ -4223,7 +4280,7 @@ function endDuel(winner) {
     saveProgress();
 
     document.getElementById('end-title').textContent = playerWon ? 'VICTORY' : 'DEFEATED';
-    document.getElementById('end-subtitle').textContent = playerWon ? 'THE FORCE IS STRONG WITH YOU' : 'STRUCK DOWN IN COMBAT';
+    document.getElementById('end-subtitle').textContent = playerWon ? (state.bossMode ? 'BOSS DEFEATED' : 'THE FORCE IS STRONG WITH YOU') : (state.bossMode ? 'THE BOSS PREVAILS' : 'STRUCK DOWN IN COMBAT');
     document.getElementById('stat-winner').textContent = winner.char.name;
     document.getElementById('stat-credits').textContent = `+${creditsEarned} ◈`;
     document.getElementById('stat-time').textContent = `${Math.round(state.elapsedTime)}s`;
@@ -4591,7 +4648,47 @@ function runForgeSlotRoll(pool, onComplete) {
 // ============================================================================
 // 9. UI BUTTON & INPUT EVENT LISTENERS
 // ============================================================================
+// ---- Sign-in requirement: you must be signed in to duel ----
+let pendingAuthAction = null;
+function isSignedIn() { return !!accountState.username && accountState.username !== 'GUEST'; }
+function requireSignIn(action) {
+    if (isSignedIn()) return true;
+    pendingAuthAction = action || null;
+    const fb = document.getElementById('account-feedback');
+    fb.style.color = '#facc15';
+    fb.textContent = 'SIGN IN OR CREATE AN ACCOUNT TO DUEL.';
+    updateSaveIndicators();
+    document.getElementById('account-modal').style.display = 'flex';
+    sfx.playHit();
+    return false;
+}
+function onSignedIn() {
+    try { localStorage.setItem('gd_user', accountState.username); } catch (e) {}
+    const act = pendingAuthAction;
+    pendingAuthAction = null;
+    if (act) {
+        setTimeout(() => { document.getElementById('account-modal').style.display = 'none'; act(); }, 600);
+    }
+}
+async function restoreSession() {
+    let saved = null;
+    try { saved = localStorage.getItem('gd_user'); } catch (e) {}
+    if (saved) {
+        try {
+            const db = await openHolocronDB();
+            const rec = await new Promise((res, rej) => {
+                const r = db.transaction('accounts', 'readonly').objectStore('accounts').get(saved);
+                r.onsuccess = () => res(r.result);
+                r.onerror = () => rej(r.error);
+            });
+            if (rec) { accountState.username = saved; accountState.passwordHash = rec.passwordHash; }
+        } catch (e) {}
+    }
+    loadProgress();
+}
+
 document.getElementById('btn-start-game').onclick = () => {
+    if (!requireSignIn(() => document.getElementById('btn-start-game').onclick())) return;
     mp.active = false;
     mp.configuringLoadout = false;
     sfx.init();
@@ -4599,6 +4696,7 @@ document.getElementById('btn-start-game').onclick = () => {
 };
 
 document.getElementById('btn-open-mp').onclick = () => {
+    if (!requireSignIn(() => document.getElementById('btn-open-mp').onclick())) return;
     mp.configuringLoadout = false;
     sfx.init();
     showScreen('mp-screen');
@@ -4640,6 +4738,12 @@ document.getElementById('tab-sith').onclick = () => {
 
 document.getElementById('opponent-select').onchange = (e) => {
     state.opponentId = e.target.value;
+};
+
+document.getElementById('boss-toggle').onchange = (e) => {
+    state.bossSelected = e.target.checked;
+    document.getElementById('difficulty-select').disabled = state.bossSelected;
+    sfx.playForce(true);
 };
 
 document.getElementById('difficulty-select').onchange = (e) => {
@@ -4822,6 +4926,7 @@ document.getElementById('btn-open-account').onclick = () => {
 };
 
 document.getElementById('btn-close-account').onclick = () => {
+    pendingAuthAction = null;
     document.getElementById('account-modal').style.display = 'none';
 };
 
@@ -4853,6 +4958,7 @@ document.getElementById('btn-acc-register').onclick = async () => {
             sfx.playVictory();
             fb.style.color = '#4ade80';
             fb.textContent = `✔ ACCOUNT CREATED & LINKED TO ${uname}!`;
+            onSignedIn();
         };
     } catch (e) {
         accountState.username = uname;
@@ -4896,6 +5002,7 @@ document.getElementById('btn-acc-login').onclick = async () => {
             sfx.playHeal();
             fb.style.color = '#4ade80';
             fb.textContent = `✔ SIGNED IN AS ${uname}! SAVE LOADED.`;
+            onSignedIn();
         };
     } catch (e) {
         fb.style.color = '#ef4444';
@@ -4906,9 +5013,10 @@ document.getElementById('btn-acc-login').onclick = async () => {
 document.getElementById('btn-acc-logout').onclick = async () => {
     accountState.username = 'GUEST';
     accountState.passwordHash = '';
+    try { localStorage.removeItem('gd_user'); } catch (e) {}
     await loadProgress('main_pilot');
     document.getElementById('account-feedback').style.color = '#38bdf8';
-    document.getElementById('account-feedback').textContent = 'SWITCHED TO GUEST PROFILE.';
+    document.getElementById('account-feedback').textContent = 'SIGNED OUT. SIGN IN TO DUEL.';
 };
 
 document.getElementById('btn-reset-account').onclick = async () => {
@@ -5111,14 +5219,16 @@ function gameLoop(now) {
 
 window.onload = function () {
     initStarfield();
-    loadProgress();
+    const sessionReady = restoreSession();
     renderSetupUI();
 
     const params = new URLSearchParams(window.location.search);
     const roomParam = params.get('room');
     if (roomParam) {
         document.getElementById('mp-room-input').value = roomParam.toUpperCase();
-        showScreen('mp-screen');
+        sessionReady.then(() => {
+            if (requireSignIn(() => showScreen('mp-screen'))) showScreen('mp-screen');
+        });
     }
 
     requestAnimationFrame(gameLoop);
