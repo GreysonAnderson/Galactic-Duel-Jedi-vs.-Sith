@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="description" content="Galactic Duel: Jedi vs. Sith - 2D Star Wars Lightsaber Fighting Game with Online Multiplayer & Persistent Progression">
     <meta name="theme-color" content="#04070d">
     <title>Galactic Duel: Jedi vs. Sith</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2304070d'/%3E%3Cline x1='16' y1='48' x2='48' y2='16' stroke='%2338bdf8' stroke-width='7' stroke-linecap='round'/%3E%3Cline x1='16' y1='48' x2='48' y2='16' stroke='%23ffffff' stroke-width='3' stroke-linecap='round'/%3E%3Cline x1='48' y1='48' x2='16' y2='16' stroke='%23ef4444' stroke-width='7' stroke-linecap='round'/%3E%3Cline x1='48' y1='48' x2='16' y2='16' stroke='%23ffffff' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4"></script>
     <style>
         :root {
             --bg-space: #04070d;
@@ -697,6 +697,78 @@
             border-bottom: none;
         }
     </style>
+
+<style>
+/* ===== MOBILE OPTIMISATIONS ===== */
+:root { color-scheme: dark; }
+html { overscroll-behavior: none; -webkit-text-size-adjust: 100%; }
+* { -webkit-tap-highlight-color: transparent; }
+input, textarea { user-select: text !important; -webkit-user-select: text !important; }
+body { position: fixed; inset: 0; width: 100%; height: 100%; touch-action: manipulation; }
+.screen { justify-content: flex-start; overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
+  padding: calc(16px + env(safe-area-inset-top, 0px)) calc(16px + env(safe-area-inset-right, 0px)) calc(16px + env(safe-area-inset-bottom, 0px)) calc(16px + env(safe-area-inset-left, 0px)); }
+.screen:not(#combat-screen) > :first-child { margin-top: auto; }
+.screen:not(#combat-screen) > :last-child { margin-bottom: auto; }
+#combat-screen { padding: 0; touch-action: none; }
+.screen:has(> .nav-footer) { padding-bottom: 0; }
+.nav-footer { position: sticky; bottom: 0; z-index: 30; width: 100%; padding: 12px 0 calc(12px + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(to top, rgba(4,7,13,.96) 70%, rgba(4,7,13,0)); }
+.map-thumb { object-fit: cover; }
+.touch-hint { display: none; text-align: center; font-size: 1rem; line-height: 1.4; color: #cbd5e1; }
+.rotate-hint { display: none; position: absolute; inset: 0; z-index: 40; background: rgba(4,7,13,.94); flex-direction: column;
+  align-items: center; justify-content: center; gap: 12px; text-align: center; font-family: 'Orbitron', sans-serif; letter-spacing: .12em; color: var(--gold); }
+.combat-top-controls { top: calc(8px + env(safe-area-inset-top, 0px)); }
+#account-modal, #confirm-join-modal { align-items: flex-start !important; overflow-y: auto; }
+#account-modal > .panel-card, #confirm-join-modal > .panel-card { margin: auto; }
+input, select { font-size: 16px !important; }
+
+@media (hover: none) {
+  .btn-sci:hover:not(:disabled), .char-card:hover, .map-card:hover, .swatch:hover { transform: none; }
+}
+@media (pointer: coarse) {
+  .keyboard-only { display: none; }
+  .touch-hint { display: block; }
+  .btn-sci { min-height: 46px; }
+  .btn-small { padding: 10px 18px; }
+  .faction-tab { padding: 14px 8px; }
+  .swatch { width: 40px; height: 40px; }
+  .saber-swatches { gap: 12px; }
+  select.sci-select, #mp-room-input { min-height: 44px; }
+  .hud-mini-btn { padding: 9px 14px; font-size: .78rem; }
+  .touch-pad { gap: 6px; }
+  .touch-btn { width: clamp(44px, min(11vh, 7.5vw), 58px); height: clamp(44px, min(11vh, 7.5vw), 58px); font-size: .68rem; touch-action: none; -webkit-touch-callout: none; background: rgba(15,23,42,.5); }
+  .touch-btn.held { background: rgba(56,189,248,.5); transform: scale(.94); }
+  .touch-controls { left: calc(14px + env(safe-area-inset-left, 0px)); right: calc(14px + env(safe-area-inset-right, 0px)); bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
+}
+@media (pointer: coarse) and (max-width: 600px) and (orientation: portrait) {
+  #combat-screen .rotate-hint { display: flex; }
+}
+@media (max-width: 860px) {
+  .char-setup-container, .map-grid { max-height: none !important; overflow: visible !important; }
+  .char-setup-container { padding: 0; }
+}
+@media (max-width: 600px) {
+  .screen { padding-left: calc(12px + env(safe-area-inset-left, 0px)); padding-right: calc(12px + env(safe-area-inset-right, 0px)); }
+  .title-actions { flex-direction: column; width: 100%; max-width: 340px; flex-wrap: nowrap !important; }
+  .title-actions .btn-sci { width: 100%; }
+  .subtitle { letter-spacing: .18em; }
+  .controls-card, .panel-card { padding: 14px; }
+  .match-stats-box { min-width: 0; width: 100%; padding: 18px; }
+  .map-grid { grid-template-columns: 1fr; gap: 10px; }
+  .map-card { flex-direction: row; }
+  .map-thumb { width: 120px; height: auto; flex: none; }
+  .map-info { padding: 10px 12px; }
+  .map-name { font-size: .86rem; }
+  .map-desc { font-size: .8rem; }
+  .nav-footer .btn-sci { flex: 1 1 auto; }
+}
+@media (max-height: 480px) {
+  .title-logo { font-size: clamp(1.6rem, 9vh, 3rem); }
+  .subtitle { margin-bottom: 10px !important; font-size: .75rem; }
+  .setup-header h2 { font-size: 1.1rem; }
+  .preview-box { height: 170px; }
+}
+</style>
 </head>
 <body>
 
@@ -709,7 +781,7 @@
         <h1 class="title-logo">GALACTIC DUEL</h1>
         <div class="subtitle" style="margin-bottom: 22px; color: #38bdf8;">JEDI VS. SITH</div>
 
-        <div style="display: flex; gap: 14px; flex-wrap: wrap; justify-content: center;">
+        <div class="title-actions" style="display: flex; gap: 14px; flex-wrap: wrap; justify-content: center;">
             <button id="btn-start-game" class="btn-sci gold-btn">SOLO ARENA</button>
             <button id="btn-open-mp" class="btn-sci">🌐 MULTIPLAYER DUEL</button>
             <button id="btn-open-account" class="btn-sci btn-small" style="border-color: #a855f7; color: #e9d5ff;">👤 HOLONET ACCOUNT</button>
@@ -718,7 +790,9 @@
             ● PILOT: GUEST • RANK: INITIATE (0 MP WINS)
         </div>
 
-        <div class="controls-card">
+        <div class="touch-hint controls-card"><h3>TOUCH CONTROLS</h3><p>Duels play best in <b>landscape</b>. Use the on-screen pad to move and jump, and the buttons on the right to slash, heavy strike, block, use Force powers, heal and unleash your ultimate. Double-tap ◀ or ▶ to dash.</p></div>
+
+        <div class="controls-card keyboard-only">
             <h3>LIGHTSABER COMBAT & FORCE CONTROLS</h3>
             <div class="controls-grid">
                 <div class="control-item">
@@ -841,7 +915,7 @@
             </div>
         </div>
 
-        <div style="margin-top: 8px; font-size: 0.82rem; color: #94a3b8; text-align: center;">
+        <div class="keyboard-only" style="margin-top: 8px; font-size: 0.82rem; color: #94a3b8; text-align: center;">
             QUICK KEYS: <strong style="color:#facc15;">A/D</strong> Move • <strong style="color:#facc15;">W</strong> Jump • <strong style="color:#facc15;">J</strong> Slash • <strong style="color:#facc15;">K</strong> Heavy • <strong style="color:#facc15;">S</strong> Block • <strong style="color:#facc15;">L</strong> Force/Blaster • <strong style="color:#facc15;">H</strong> Heal • <strong style="color:#facc15;">U</strong> All-Out (1x)
         </div>
 
@@ -1010,6 +1084,8 @@
         </div>
 
         <!-- Touch Controls for Mobile / Tablet -->
+        <div class="rotate-hint"><div style="font-size:3rem">📱↻</div><div>ROTATE YOUR DEVICE<br>TO LANDSCAPE TO DUEL</div></div>
+
         <div class="touch-controls">
             <div class="touch-pad">
                 <button class="touch-btn" data-key="ArrowLeft">◀</button>
@@ -1074,7 +1150,7 @@
             <div id="account-current-badge" style="font-family: 'Orbitron', sans-serif; font-size: 0.78rem; color: #4ade80; margin-bottom: 12px;">
                 ACTIVE PILOT: GUEST
             </div>
-            <input id="acc-username-input" type="text" maxlength="16" placeholder="PILOT USERNAME (E.G. SKYWALKER99)" style="width: 100%; background: rgba(15, 23, 42, 0.95); color: #ffffff; border: 1px solid rgba(168, 85, 247, 0.55); border-radius: 8px; padding: 10px; font-family: 'Orbitron', sans-serif; font-size: 0.85rem; margin-bottom: 10px; text-transform: uppercase;">
+            <input id="acc-username-input" type="text" maxlength="16" placeholder="PILOT USERNAME" style="width: 100%; background: rgba(15, 23, 42, 0.95); color: #ffffff; border: 1px solid rgba(168, 85, 247, 0.55); border-radius: 8px; padding: 10px; font-family: 'Orbitron', sans-serif; font-size: 0.85rem; margin-bottom: 10px; text-transform: uppercase;">
             <input id="acc-password-input" type="password" maxlength="32" placeholder="ACCOUNT PASSWORD" style="width: 100%; background: rgba(15, 23, 42, 0.95); color: #ffffff; border: 1px solid rgba(56, 189, 248, 0.45); border-radius: 8px; padding: 10px; font-family: 'Orbitron', sans-serif; font-size: 0.85rem; margin-bottom: 10px;">
             <div id="account-feedback" style="min-height: 22px; font-family: 'Orbitron', sans-serif; font-size: 0.74rem; color: #facc15; margin-bottom: 10px;"></div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
@@ -3205,6 +3281,7 @@ function startDuel(mpConfig = null) {
     state.enemy.y = state.floorY - 140;
 
     showScreen('combat-screen');
+    tryLandscapeLock();
     setTimeout(() => {
         if (state.player) state.player.ignited = true;
         sfx.playIgnite();
@@ -3861,6 +3938,7 @@ function drawFighterHUD(f, x, y, width, alignRight) {
     const pilotTag = mp.active
         ? ` [${f.isPlayer ? accountState.username : mp.opponentUsername}]`
         : '';
+    fitFont(900, 15, f.char.name + pilotTag, width);
     ctx.fillText(f.char.name + pilotTag, alignRight ? x + width : x, y - 8);
 
     ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
@@ -3891,32 +3969,67 @@ function drawFighterHUD(f, x, y, width, alignRight) {
     ctx.restore();
 }
 
+// ---- Mobile helpers ----
+const safeProbe = document.createElement('div');
+safeProbe.style.cssText = 'position:fixed;left:0;top:0;width:0;height:0;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)';
+document.body.appendChild(safeProbe);
+function getSafeInsets() {
+    const cs = getComputedStyle(safeProbe);
+    return { t: parseFloat(cs.paddingTop) || 0, r: parseFloat(cs.paddingRight) || 0, b: parseFloat(cs.paddingBottom) || 0, l: parseFloat(cs.paddingLeft) || 0 };
+}
+function portraitPaused() {
+    return state.inCombat && !mp.active && window.matchMedia('(pointer: coarse) and (max-width: 600px) and (orientation: portrait)').matches;
+}
+function fitFont(weight, maxSize, text, maxWidth) {
+    let fs = maxSize;
+    ctx.font = `${weight} ${fs}px Orbitron, sans-serif`;
+    while (fs > 10 && ctx.measureText(text).width > maxWidth) { fs--; ctx.font = `${weight} ${fs}px Orbitron, sans-serif`; }
+}
+function tryLandscapeLock() {
+    try {
+        if (!window.matchMedia('(pointer: coarse)').matches || document.fullscreenElement) return;
+        const el = document.documentElement;
+        const p = el.requestFullscreen ? el.requestFullscreen() : Promise.reject();
+        p.then(() => screen.orientation && screen.orientation.lock && screen.orientation.lock('landscape')).catch(() => {});
+    } catch (e) {}
+}
+function leaveFullscreen() {
+    try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {}
+}
+function releaseAllKeys() {
+    Object.keys(keys).forEach(k => keys[k] = false);
+    document.querySelectorAll('.touch-btn.held').forEach(b => b.classList.remove('held'));
+}
+
 function renderCombatHUD() {
     const w = gameCanvas.width;
-    const barW = Math.min(340, w * 0.34);
-    drawFighterHUD(state.player, 24, 34, barW, false);
-    drawFighterHUD(state.enemy, w - 24 - barW, 34, barW, true);
+    const si = getSafeInsets();
+    const barW = Math.min(340, (w - si.l - si.r) * 0.34);
+    drawFighterHUD(state.player, 24 + si.l, 34 + si.t, barW, false);
+    drawFighterHUD(state.enemy, w - 24 - si.r - barW, 34 + si.t, barW, true);
 
     ctx.save();
     ctx.font = '900 24px Orbitron, sans-serif';
     ctx.fillStyle = state.roundTime <= 15 ? '#ef4444' : '#facc15';
     ctx.textAlign = 'center';
-    ctx.fillText(Math.ceil(state.roundTime), w * 0.5, 62);
+    ctx.fillText(Math.ceil(state.roundTime), w * 0.5, 62 + si.t);
 
     if (mp.active && mp.roomCode) {
         ctx.font = '700 11px Orbitron, sans-serif';
         ctx.fillStyle = '#38bdf8';
-        ctx.fillText(`ONLINE ROOM: ${mp.roomCode}`, w * 0.5, 80);
+        ctx.fillText(`ONLINE ROOM: ${mp.roomCode}`, w * 0.5, 80 + si.t);
     }
 
     if (state.introTimer > 0) {
-        ctx.font = '900 38px Orbitron, sans-serif';
+        const introTxt = state.introTimer > 0.6 ? 'PREPARE FOR DUEL...' : 'ENGAGE!';
+        fitFont(900, 38, introTxt, w * 0.9);
         ctx.fillStyle = '#38bdf8';
-        ctx.fillText(state.introTimer > 0.6 ? 'PREPARE FOR DUEL...' : 'ENGAGE!', w * 0.5, gameCanvas.height * 0.36);
+        ctx.fillText(introTxt, w * 0.5, gameCanvas.height * 0.36);
     } else if (state.victoryWinner) {
-        ctx.font = '900 38px Orbitron, sans-serif';
+        const winTxt = `${state.victoryWinner.char.name} VICTORIOUS!`;
+        fitFont(900, 38, winTxt, w * 0.9);
         ctx.fillStyle = '#facc15';
-        ctx.fillText(`${state.victoryWinner.char.name} VICTORIOUS!`, w * 0.5, gameCanvas.height * 0.32);
+        ctx.fillText(winTxt, w * 0.5, gameCanvas.height * 0.32);
     }
     ctx.restore();
 }
@@ -4016,6 +4129,8 @@ function renderCombat(timeSec) {
 
 function endDuel(winner) {
     state.inCombat = false;
+    releaseAllKeys();
+    leaveFullscreen();
     const playerWon = winner === state.player;
     const lvl = Math.max(1, Math.min(9, Number(state.difficulty) || 4));
     const winDiffTable = [0.6, 0.75, 0.9, 1.0, 1.2, 1.45, 1.75, 2.1, 2.6];
@@ -4824,29 +4939,107 @@ window.addEventListener('keyup', (e) => {
     keys[e.code] = false;
 });
 
-document.querySelectorAll('.touch-btn').forEach(btn => {
-    const code = btn.getAttribute('data-key');
-    const press = (ev) => {
-        ev.preventDefault();
+(function setupTouchControls() {
+    const active = new Map(); // touch identifier -> button
+    const press = (btn) => {
+        const code = btn.dataset.key;
         keys[code] = true;
+        btn.classList.add('held');
+        if ((code === 'ArrowLeft' || code === 'ArrowRight') && state.inCombat && state.player && !state.victoryWinner && state.introTimer <= 0) {
+            const now = performance.now();
+            if (now - (lastTapTime[code] || 0) < 260) {
+                state.player.vx = (code === 'ArrowLeft' ? -1 : 1) * 680;
+                state.player.dashTimer = 0.18;
+                sfx.playSwing(false);
+            }
+            lastTapTime[code] = now;
+        }
         handleActionKey(code);
     };
-    const release = (ev) => {
-        ev.preventDefault();
-        keys[code] = false;
+    const release = (btn) => {
+        keys[btn.dataset.key] = false;
+        btn.classList.remove('held');
     };
-    btn.addEventListener('touchstart', press, { passive: false });
-    btn.addEventListener('touchend', release, { passive: false });
-    btn.addEventListener('mousedown', press);
-    btn.addEventListener('mouseup', release);
-});
+    const btnAt = (t) => {
+        const el = document.elementFromPoint(t.clientX, t.clientY);
+        return el && el.closest ? el.closest('.touch-btn') : null;
+    };
+    const isDir = (b) => b.dataset.key === 'ArrowLeft' || b.dataset.key === 'ArrowRight';
+    const pad = document.querySelector('.touch-controls');
+    pad.addEventListener('touchstart', (ev) => {
+        ev.preventDefault();
+        for (const t of ev.changedTouches) {
+            const b = btnAt(t);
+            if (b) { active.set(t.identifier, b); press(b); }
+        }
+    }, { passive: false });
+    pad.addEventListener('touchmove', (ev) => {
+        ev.preventDefault();
+        for (const t of ev.changedTouches) {
+            const cur = active.get(t.identifier);
+            if (!cur || !isDir(cur)) continue;
+            const b = btnAt(t);
+            if (b && b !== cur && isDir(b)) { release(cur); active.set(t.identifier, b); press(b); }
+        }
+    }, { passive: false });
+    const end = (ev) => {
+        ev.preventDefault();
+        for (const t of ev.changedTouches) {
+            const b = active.get(t.identifier);
+            if (b) { release(b); active.delete(t.identifier); }
+        }
+    };
+    pad.addEventListener('touchend', end, { passive: false });
+    pad.addEventListener('touchcancel', end, { passive: false });
+    // mouse fallback (hybrid / desktop narrow windows)
+    pad.querySelectorAll('.touch-btn').forEach(b => {
+        b.addEventListener('mousedown', () => press(b));
+        b.addEventListener('mouseup', () => release(b));
+        b.addEventListener('mouseleave', () => release(b));
+    });
+    window.addEventListener('blur', releaseAllKeys);
+    document.addEventListener('visibilitychange', () => { if (document.hidden) releaseAllKeys(); });
+
+    // HUD buttons (previously had no handlers)
+    document.getElementById('btn-toggle-sound').onclick = (e) => {
+        const muted = sfx.toggleMute();
+        e.currentTarget.textContent = muted ? '🔇 SFX: OFF' : '🔊 SFX: ON';
+    };
+    let abortArmed = null;
+    const abortBtn = document.getElementById('btn-quit-match');
+    abortBtn.onclick = () => {
+        if (!abortArmed) {
+            abortBtn.textContent = '⚠ TAP AGAIN';
+            abortArmed = setTimeout(() => { abortArmed = null; abortBtn.textContent = '✖ ABORT'; }, 2500);
+            return;
+        }
+        clearTimeout(abortArmed); abortArmed = null;
+        abortBtn.textContent = '✖ ABORT';
+        state.inCombat = false;
+        state.victoryWinner = null;
+        releaseAllKeys();
+        leaveFullscreen();
+        if (mp.guestTimeout) { clearTimeout(mp.guestTimeout); mp.guestTimeout = null; }
+        const wasMp = mp.active;
+        mp.active = false;
+        showScreen(wasMp ? 'mp-screen' : 'char-screen');
+    };
+})();
 
 window.addEventListener('resize', () => {
     initStarfield();
     if (state.inCombat) {
+        const ow = gameCanvas.width, oh = gameCanvas.height;
         gameCanvas.width = window.innerWidth;
         gameCanvas.height = window.innerHeight;
-        state.floorY = gameCanvas.height * 0.84;
+        const nw = gameCanvas.width, nh = gameCanvas.height;
+        if (ow && oh && (ow !== nw || oh !== nh)) {
+            const map = MAPS.find(m => m.id === state.selectedMapId) || MAPS[0];
+            state.floorY = nh * 0.84;
+            state.platforms = map.platforms.map(p => ({ x: p.x * nw, y: p.y * nh, w: p.w * nw, h: p.h }));
+            [state.player, state.enemy].forEach(f => { if (f) { f.x *= nw / ow; f.y *= nh / oh; } });
+            state.rocks.forEach(r => { r.x *= nw / ow; r.y *= nh / oh; });
+        }
     }
 });
 
@@ -4856,9 +5049,9 @@ function gameLoop(now) {
     lastFrameTime = now;
     const timeSec = now / 1000;
 
-    renderStarfield();
+    if (!state.inCombat) renderStarfield();
     updatePreview(timeSec);
-    updateCombat(dt);
+    if (!portraitPaused()) updateCombat(dt);
     renderCombat(timeSec);
 
     requestAnimationFrame(gameLoop);
